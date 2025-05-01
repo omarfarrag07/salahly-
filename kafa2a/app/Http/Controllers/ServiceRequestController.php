@@ -2,63 +2,98 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ServiceRequest;
 use Illuminate\Http\Request;
 
 class ServiceRequestController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        //
+        $requests = ServiceRequest::with(['service', 'user'])
+            ->when(request('status'), fn($q, $status) => $q->where('status', $status))
+            ->when(request('service_id'), fn($q, $id) => $q->where('service_id', $id))
+            ->latest()
+            ->paginate(10);
+
+        return response()->json($requests);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        //
+        $validated = $request->validate([
+            'service_id'   => 'required|exists:services,id',
+            'description'  => 'required|string|max:500',
+            'location'     => 'required|json',
+            'scheduled_at' => 'nullable|date|after:now'
+        ]);
+
+        $serviceRequest = auth()->user()->serviceRequests()->create([
+            ...$validated,
+            'status' => 'pending',
+        ]);
+
+        return response()->json($serviceRequest, 201);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function show($id)
     {
-        //
+        $request = ServiceRequest::with(['user', 'service', 'offers'])->findOrFail($id);
+        return response()->json($request);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
+    public function update(Request $request, $id)
     {
-        //
+        $serviceRequest = ServiceRequest::findOrFail($id);
+
+        if ($serviceRequest->user_id !== auth()->id()) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        $validated = $request->validate([
+            'description' => 'sometimes|string|max:500',
+            'location'    => 'sometimes|json',
+            'scheduled_at'=> 'nullable|date|after:now'
+        ]);
+
+        $serviceRequest->update($validated);
+
+        return response()->json($serviceRequest);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    public function destroy($id)
     {
-        //
+        $request = ServiceRequest::findOrFail($id);
+
+        if ($request->user_id !== auth()->id()) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        }
+
+        if ($request->status !== 'pending') {
+            return response()->json(['message' => 'Only pending requests can be deleted'], 400);
+        }
+
+        $request->delete();
+
+        return response()->json(['message' => 'Request deleted successfully']);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
+    public function accept(ServiceRequest $request)
     {
-        //
+        $request->update(['status' => 'accepted']);
+        return response()->json($request);
+    }
+
+    public function cancel(ServiceRequest $request)
+    {
+        abort_if($request->user_id !== auth()->id(), 403);
+        abort_if($request->status !== 'pending', 400, 'Only pending requests can be canceled');
+        $request->update(['status' => 'canceled']);
+        return response()->json($request);
+    }
+
+    public function complete(ServiceRequest $request)
+    {
+        $request->update(['status' => 'completed']);
+        return response()->json($request);
     }
 }

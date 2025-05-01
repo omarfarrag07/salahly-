@@ -21,6 +21,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'type',
     ];
 
     /**
@@ -46,13 +47,33 @@ class User extends Authenticatable
         ];
     }
 
+    public function newFromBuilder($attributes = [], $connection = null)
+{
+    $instance = parent::newFromBuilder($attributes, $connection);
+
+    if (!empty($instance->type)) {
+        $class = '\\App\\Models\\' . $instance->type;
+
+        if (class_exists($class)) {
+            $instance = (new $class)->newInstance([], true);
+            $instance->setRawAttributes((array) $attributes, true);
+        }
+    }
+
+    return $instance;
+}
+
     public function isAdmin(): bool
     {
-        return $this->role === 'admin';
+        return $this->type === 'admin';
     }
     public function isUser(): bool
     {
-        return $this->role === 'user';
+        return $this->type === 'user';
+    }
+    public function isProvider(): bool
+    {
+        return $this->type === 'Provider';
     }
     
     public function serviceRequests()

@@ -2,63 +2,40 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Rating;
 use Illuminate\Http\Request;
 
 class RatingController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
-    {
-        //
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        //
+        $validated = $request->validate([
+            'provider_id' => 'required|exists:users,id',
+            'service_request_id' => 'required|exists:service_requests,id',
+            'rating' => 'required|integer|min:1|max:5',
+            'comment' => 'nullable|string|max:500',
+        ]);
+
+        $existing = Rating::where('user_id', auth()->id())
+            ->where('service_request_id', $validated['service_request_id'])
+            ->first();
+
+        if ($existing) {
+            return response()->json(['message' => 'You already rated this request'], 400);
+        }
+
+        $rating = Rating::create([
+            ...$validated,
+            'user_id' => auth()->id()
+        ]);
+
+        return response()->json($rating, 201);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function index()
     {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        // Ratings given by this user
+        $ratings = Rating::where('user_id', auth()->id())->latest()->paginate(10);
+        return response()->json($ratings);
     }
 }
