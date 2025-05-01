@@ -9,6 +9,12 @@ use App\Http\Controllers\MessageController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ProviderController;
+use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\ServiceController;
+
+
+
+
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('users', UserController::class)->only(['index', 'show', 'update', 'destroy']);
@@ -24,6 +30,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('offers', OfferController::class)->only(['index', 'store', 'show']);
     Route::post('offers/{id}/accept', [OfferController::class, 'accept']);
     Route::post('offers/{id}/reject', [OfferController::class, 'reject']);
+    
+    Route::apiResource('categories', CategoryController::class);
+    Route::apiResource('categories', CategoryController::class)->only(['index', 'store', 'show']);
+    Route::put('categories/{id}', [CategoryController::class, 'update']);
+    Route::delete('categories/{id}', [CategoryController::class, 'destroy']);
+
+    Route::apiResource('services', ServiceController::class);
+
+
 
     Route::apiResource('ratings', RatingController::class)->only(['index', 'store']);
     Route::apiResource('messages', MessageController::class)->only(['index', 'store']);
