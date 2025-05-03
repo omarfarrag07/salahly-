@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AcceptedOffer;
 use App\Models\Offer;
 use App\Models\ServiceRequest;
 use Illuminate\Http\Request;
+use App\Events\ChatStarted;
 
 class OfferController extends Controller
 {
@@ -51,11 +53,30 @@ class OfferController extends Controller
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
-        $offer->update(['status' => 'accepted']);
+        if (AcceptedOffer::where('service_request_id', $offer->service_request_id)->exists()) {
+            return response()->json(['message' => 'Request already accepted'], 400);
+        }
+
         $offer->serviceRequest->update(['status' => 'accepted']);
 
-        return response()->json($offer);
+        $acceptedOffer = AcceptedOffer::create([
+            'offer_id' => $offer->id,
+            'service_request_id' => $offer->service_request_id
+        ]);
+
+        event(new ChatStarted([
+            'chat_id' => $acceptedOffer->id,
+            'user_id' => $offer->serviceRequest->user_id,
+            'provider_id' => $offer->provider_id,
+            'service_request_id' => $offer->service_request_id
+        ]));
+
+        return response()->json([
+            'message' => 'Offer accepted and chat started.',
+            'accepted_offer' => $acceptedOffer
+        ], 201);
     }
+
 
     public function reject($id)
     {

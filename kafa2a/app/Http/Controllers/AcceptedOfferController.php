@@ -3,10 +3,9 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Events\MessageSent;
-use App\Models\Message;
+use App\Models\AcceptedOffer;
 
-class MessageController extends Controller
+class AcceptedOfferController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -16,19 +15,19 @@ class MessageController extends Controller
         //
     }
 
-
-    public function send(Request $request)
+    public function showByRequest($requestId)
     {
-        $message = Message::create([
-            'sender_id' => auth()->id(),
-            'receiver_id' => $request->receiver_id,
-            'content' => $request->content,
-        ]);
+        $accepted = AcceptedOffer::with(['offer.provider', 'serviceRequest.user'])
+            ->where('service_request_id', $requestId)
+            ->first();
 
-        broadcast(new MessageSent($message))->toOthers();
+        if (!$accepted) {
+            return response()->json(['message' => 'Not accepted yet'], 404);
+        }
 
-        return response()->json($message);
+        return response()->json($accepted);
     }
+
 
     /**
      * Show the form for creating a new resource.

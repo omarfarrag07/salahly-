@@ -31,12 +31,20 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('offers/{id}/accept', [OfferController::class, 'accept']);
     Route::post('offers/{id}/reject', [OfferController::class, 'reject']);
     
-    Route::apiResource('categories', CategoryController::class);
-    Route::apiResource('categories', CategoryController::class)->only(['index', 'store', 'show']);
-    Route::put('categories/{id}', [CategoryController::class, 'update']);
-    Route::delete('categories/{id}', [CategoryController::class, 'destroy']);
+    // Route::apiResource('categories', CategoryController::class);
+    Route::apiResource('categories', CategoryController::class)->only(['index', 'show']);
+    Route::middleware('admin')->group(function () {
+        Route::post('categories', [CategoryController::class, 'store']);
+        Route::put('categories/{id}', [CategoryController::class, 'update']);
+        Route::delete('categories/{id}', [CategoryController::class, 'destroy']);
+    });
 
-    Route::apiResource('services', ServiceController::class);
+
+    Broadcast::channel('chat.{receiverId}', function ($user, $receiverId) {
+        return (int) $user->id === (int) $receiverId;
+    });
+
+    // Route::apiResource('services', ServiceController::class);
 
 
 

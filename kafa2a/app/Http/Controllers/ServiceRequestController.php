@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AcceptedOffer;
 use App\Models\ServiceRequest;
 use Illuminate\Http\Request;
 
@@ -21,9 +22,9 @@ class ServiceRequestController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'service_id'   => 'required|exists:services,id',
-            'description'  => 'required|string|max:500',
-            'location'     => 'required|json',
+            'service_id' => 'required|exists:services,id',
+            'description' => 'required|string|max:500',
+            'location' => 'required|json',
             'scheduled_at' => 'nullable|date|after:now'
         ]);
 
@@ -51,8 +52,8 @@ class ServiceRequestController extends Controller
 
         $validated = $request->validate([
             'description' => 'sometimes|string|max:500',
-            'location'    => 'sometimes|json',
-            'scheduled_at'=> 'nullable|date|after:now'
+            'location' => 'sometimes|json',
+            'scheduled_at' => 'nullable|date|after:now'
         ]);
 
         $serviceRequest->update($validated);
@@ -80,6 +81,16 @@ class ServiceRequestController extends Controller
     public function accept(ServiceRequest $request)
     {
         $request->update(['status' => 'accepted']);
+
+        AcceptedOffer::create([
+            'service_request_id' => $request->id,
+            'provider_id' => auth()->id(), 
+        ]);
+        //ToDo: Notify the user about the acceptance
+        // event(new RequestAccepted($request)); // you can define this event similarly
+
+        // return response()->json(['message' => 'Request accepted']);
+
         return response()->json($request);
     }
 

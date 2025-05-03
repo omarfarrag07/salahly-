@@ -24,6 +24,15 @@ class AcceptedOffer extends Model
         return $this->belongsTo(Offer::class);
     }
 
+    public function user()
+    {
+        return $this->serviceRequest->user(); // via serviceRequest
+    }
+    public function provider()
+    {
+        return $this->offer->provider(); // via offer
+    }
+
     public function payment()
     {
         return $this->hasOne(Payment::class);
