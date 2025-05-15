@@ -16,6 +16,7 @@ use App\Http\Controllers\ServiceController;
 
 
 
+
 Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('users', UserController::class)->only(['index', 'show', 'update', 'destroy']);
     Route::apiResource('providers', ProviderController::class)->only(['index', 'show', 'update', 'destroy']);

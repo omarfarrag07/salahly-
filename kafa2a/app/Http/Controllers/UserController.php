@@ -23,7 +23,7 @@ class UserController extends Controller
 
     public function update(Request $request, $id)
     {
-        $user = User::where('type', 'User')->findOrFail($id);
+        $user = User::where('type', operator: 'User')->findOrFail($id);
         $user->update($request->only('name', 'email'));
         return response()->json($user);
     }

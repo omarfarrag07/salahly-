@@ -15,4 +15,9 @@ Route::middleware(['auth', 'admin'])->group(function () {
 
 
 
+Route::get('/test-event', function() {
+    return view('test-event');
+});
+
+
 require __DIR__.'/auth.php';
