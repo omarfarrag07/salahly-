@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\Provider;
 use App\Models\ServiceRequest;
 use App\Models\Offer;
 use Illuminate\Http\Request;
@@ -49,4 +50,31 @@ class AdminController extends Controller
 
         return response()->json(['message' => 'User deleted']);
     }
+    
+    public function reviewProviderStatus(Request $request, $userId)
+    {
+        $request->validate([
+            'status' => 'required|in:accepted,refused,suspended',
+            'suspend_reason' => 'nullable|string|max:1000',
+        ]);
+    
+        $user = User::where('type', 'Provider')->findOrFail($userId);
+        $provider = $user->provider;
+    
+        if (!$provider) {
+            return response()->json(['error' => 'Provider profile not found.'], 404);
+        }
+    
+        if ($request->status === 'suspended' && empty($request->suspend_reason)) {
+            return response()->json(['error' => 'Suspension reason is required.'], 422);
+        }
+    
+        $provider->status = $request->status;
+        $provider->suspend_reason = $request->status === 'suspended' ? $request->suspend_reason : null;
+        $provider->save();
+    
+        return response()->json(['message' => 'Provider status updated successfully.']);
+    }
+    
+
 }
