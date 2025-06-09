@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\Provider;
+use App\Models\User;
 use Illuminate\Auth\Events\Registered;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
@@ -18,17 +20,17 @@ class RegisteredProviderController extends Controller
      *
      * @throws \Illuminate\Validation\ValidationException
      */
-    public function store(Request $request): Response
+    public function store(Request $request): JsonResponse
 {
     $request->validate([
         'name' => ['required', 'string', 'max:255'],
-        'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:providers,email'],
+        'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:users,email'],
         'password' => ['required', 'confirmed', Rules\Password::defaults()],
         'service' => ['required', 'string', 'max:255'],
         'national_id' => ['required', 'string', 'max:255'],
         'address' => ['required', 'string', 'max:255'],
         'police_certificate' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
-        'selfie' => ['required', 'file', 'image', 'max:2048'],
+        'selfie' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
         'gender' => ['required', 'in:M,F'],
     ]);
 
@@ -49,9 +51,9 @@ class RegisteredProviderController extends Controller
 
     event(new Registered($provider));
     
-    Auth::login($provider);
+    // Auth::login($provider);
 
-    return response()->noContent();
+    return response()->json($provider, 201);
 }
 }
 
