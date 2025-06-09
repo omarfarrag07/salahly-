@@ -18,6 +18,13 @@ return new class extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->string('type')->default('User'); // 'User', 'Provider', 'Admin'
+            $table->string('phone')->unique()->nullable();
+            $table->string('address')->nullable();
+            $table->string('police_certificate_path')->nullable();
+            $table->string('selfie_path')->nullable();
+            $table->string('national_id')->nullable();
+            $table->string('gender')->nullable();
+            $table->string('service')->nullable(); // For Providers
             $table->rememberToken();
             $table->timestamps();
         });

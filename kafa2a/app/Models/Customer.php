@@ -5,6 +5,8 @@ namespace App\Models;
 
 class Customer extends User
 {
+    protected $table = 'users';
+
     protected static function boot()
     {
         parent::boot();

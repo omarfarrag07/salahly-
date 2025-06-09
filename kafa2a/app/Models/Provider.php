@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 class Provider extends User
 {
 
+    protected $table = 'users';
+
     protected static function boot()
     {
         parent::boot();
