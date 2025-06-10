@@ -14,16 +14,11 @@ return new class extends Migration
         Schema::create('providers', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade'); // provider is a user
-            $table->string('service', 255);
-            $table->string('national_id', 255);
-            $table->string('address', 255);
             $table->string('profession');
             $table->text('bio')->nullable();
             $table->string('location');
             $table->timestamps();
-            $table->string('selfie_path')->nullable();
-            $table->string('police_certificate_path')->nullable();
-            $table->enum('status', ['pending', 'accepted', 'refused', 'suspended'])->default('pending');
+            $table->enum('status', ['pending', 'accepted', 'refused', 'suspended'])->default('pending')->nullable();
             $table->text('suspend_reason')->nullable();
         });
         
