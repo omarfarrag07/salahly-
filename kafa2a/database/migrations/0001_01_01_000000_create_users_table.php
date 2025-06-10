@@ -24,6 +24,7 @@ return new class extends Migration
             $table->string('selfie_path')->nullable();
             $table->string('national_id')->nullable();
             $table->string('gender')->nullable();
+            // $table->enum('gender', ['M', 'F']);
             $table->string('service')->nullable(); // For Providers
             $table->enum('status', ['pending', 'accepted', 'refused', 'suspended'])->default('pending')->nullable();
             $table->text('suspend_reason')->nullable();

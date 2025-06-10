@@ -110,6 +110,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/providers', [AdminController::class, 'allProviders']);
         Route::get('/requests', [AdminController::class, 'allRequests']);
         Route::delete('/users/{id}', [AdminController::class, 'deleteUser']);
+        Route::put('/providers/{id}/review-status', [AdminController::class, 'reviewProviderStatus']);//status of provider
     });
 });
 
