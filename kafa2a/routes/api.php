@@ -107,7 +107,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/requests/{id}', [ProviderController::class, 'getRequestByID']);   // view request by id
         Route::post('/requests/{id}/offer', [ProviderController::class, 'sendOffer']); // send an offer
     
-=======
     // Accepted Offers
     Route::apiResource('accepted-offers', \App\Http\Controllers\AcceptedOfferController::class)
         ->only(['index', 'show', 'store', 'update', 'destroy']);
