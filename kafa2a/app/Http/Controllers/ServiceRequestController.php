@@ -11,6 +11,8 @@ class ServiceRequestController extends Controller
     public function index()
     {
         $requests = ServiceRequest::with(['service', 'user'])
+            ->where('user_id', auth()->id()) // Only the authenticated user's requests
+            ->where('status', 'pending')     // Only show pending requests
             ->when(request('status'), fn($q, $status) => $q->where('status', $status))
             ->when(request('service_id'), fn($q, $id) => $q->where('service_id', $id))
             ->latest()
@@ -25,7 +27,8 @@ class ServiceRequestController extends Controller
             'service_id' => 'required|exists:services,id',
             'description' => 'required|string|max:500',
             'location' => 'required|json',
-            'scheduled_at' => 'nullable|date|after:now'
+            'scheduled_at' => 'nullable|date|after:now',
+            'price' => 'required|numeric|min:0',
         ]);
 
         $serviceRequest = auth()->user()->serviceRequests()->create([
@@ -53,7 +56,8 @@ class ServiceRequestController extends Controller
         $validated = $request->validate([
             'description' => 'sometimes|string|max:500',
             'location' => 'sometimes|json',
-            'scheduled_at' => 'nullable|date|after:now'
+            'scheduled_at' => 'nullable|date|after:now',
+            'price' => 'sometimes|numeric|min:0',
         ]);
 
         $serviceRequest->update($validated);

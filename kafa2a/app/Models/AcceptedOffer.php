@@ -26,7 +26,7 @@ class AcceptedOffer extends Model
 
     public function user()
     {
-        return $this->serviceRequest->user(); // via serviceRequest
+        return $this->serviceRequest; // via serviceRequest
     }
     public function provider()
     {

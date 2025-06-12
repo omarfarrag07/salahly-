@@ -8,10 +8,10 @@ class Rating extends Model
 {
     //
     public function user() {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     public function provider() {
-        return $this->belongsTo(Provider::class);
+        return $this->belongsTo(User::class, 'provider_id');
     }
 }

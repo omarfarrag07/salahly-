@@ -14,9 +14,11 @@ return new class extends Migration
         Schema::create('service_requests', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->string('title');
+            $table->foreignId('service_id')->constrained()->onDelete('cascade'); // Add this if not present
+            $table->string('title')->nullable(); // Optional, if you want to keep it
             $table->text('description');
             $table->string('location');
+            $table->decimal('price', 10, 2)->nullable(); // <-- Add this line
             $table->timestamp('scheduled_at')->nullable();
             $table->string('status')->default('pending');
             $table->timestamps();
