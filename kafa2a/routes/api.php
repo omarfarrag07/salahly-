@@ -74,18 +74,19 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('providers', ProviderController::class)->only(['index', 'show', 'update', 'destroy']);
 
 
-
+    // Service Requests
     Route::apiResource('service-requests', ServiceRequestController::class);
     Route::post('service-requests/{request}/accept', [ServiceRequestController::class, 'accept']);
     Route::post('service-requests/{request}/cancel', [ServiceRequestController::class, 'cancel']);
     Route::post('service-requests/{request}/complete', [ServiceRequestController::class, 'complete']);
 
+    // Offers
     Route::apiResource('offers', OfferController::class)->only(['index', 'store', 'show']);
     Route::post('offers/{id}/accept', [OfferController::class, 'accept']);
     Route::post('offers/{id}/reject', [OfferController::class, 'reject']);
     Route::get('my-request-offers', [OfferController::class, 'offersForMyRequests']);
 
-    // Route::apiResource('categories', CategoryController::class);
+    // Categories
     Route::apiResource('categories', CategoryController::class)->only(['index', 'show']);
     Route::middleware('admin')->group(function () {
         Route::post('categories', [CategoryController::class, 'store']);
@@ -105,6 +106,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('ratings', RatingController::class)->only(['index', 'store']);
     Route::apiResource('messages', MessageController::class)->only(['index', 'store']);
 
+    // Admin Routes
     Route::prefix('admin')->middleware('admin')->group(function () {
         Route::get('/dashboard', [AdminController::class, 'dashboard']);
         Route::get('/users', [AdminController::class, 'allUsers']);
@@ -112,8 +114,15 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/requests', [AdminController::class, 'allRequests']);
         Route::delete('/users/{id}', [AdminController::class, 'deleteUser']);
     });
+
+    // Accepted Offers
+    Route::apiResource('accepted-offers', \App\Http\Controllers\AcceptedOfferController::class)->only(['index', 'show', 'store', 'update', 'destroy']);
+    Route::get('service-requests/{requestId}/accepted-offer', [\App\Http\Controllers\AcceptedOfferController::class, 'showByRequest']);
+    Route::get('users/{userId}/accepted-offers', [\App\Http\Controllers\AcceptedOfferController::class, 'acceptedOfferforUser']);
 });
 
+
+// Login
 Route::post('/token', function (Request $request) {
     $request->validate([
         'email' => 'required|email',

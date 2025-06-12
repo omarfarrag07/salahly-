@@ -12,7 +12,8 @@ class AcceptedOfferController extends Controller
      */
     public function index()
     {
-        //
+        $acceptedOffers = AcceptedOffer::with(['offer.provider', 'serviceRequest.user'])->paginate(10);
+        return response()->json($acceptedOffers);
     }
 
     public function showByRequest($requestId)
@@ -28,21 +29,35 @@ class AcceptedOfferController extends Controller
         return response()->json($accepted);
     }
 
+    public function acceptedOfferforUser($userId)
+    {
+        $acceptedOffers = AcceptedOffer::with(['offer.provider', 'serviceRequest.user'])
+            ->whereHas('serviceRequest', function ($query) use ($userId) {
+                $query->where('user_id', $userId);
+            })
+            ->paginate(10);
+
+        return response()->json($acceptedOffers);
+    }
 
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
-    {
-        //
-    }
-
+   
     /**
      * Store a newly created resource in storage.
+     * (Usually not used directly; accepted offers are created when a user accepts an offer)
      */
     public function store(Request $request)
     {
-        //
+        $validated = $request->validate([
+            'offer_id' => 'required|exists:offers,id',
+            'service_request_id' => 'required|exists:service_requests,id',
+        ]);
+
+        $acceptedOffer = AcceptedOffer::create($validated);
+
+        return response()->json($acceptedOffer, 201);
     }
 
     /**
@@ -50,23 +65,35 @@ class AcceptedOfferController extends Controller
      */
     public function show(string $id)
     {
-        //
-    }
+        $acceptedOffer = AcceptedOffer::with(['offer.provider', 'serviceRequest.user'])->find($id);
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
+        if (!$acceptedOffer) {
+            return response()->json(['message' => 'Not found'], 404);
+        }
+
+        return response()->json($acceptedOffer);
     }
 
     /**
      * Update the specified resource in storage.
+     * (Usually not needed, but you can allow updating status or notes)
      */
     public function update(Request $request, string $id)
     {
-        //
+        $acceptedOffer = AcceptedOffer::find($id);
+
+        if (!$acceptedOffer) {
+            return response()->json(['message' => 'Not found'], 404);
+        }
+
+        $validated = $request->validate([
+            'status' => 'sometimes|string',
+            // Add other updatable fields here
+        ]);
+
+        $acceptedOffer->update($validated);
+
+        return response()->json($acceptedOffer);
     }
 
     /**
@@ -74,6 +101,14 @@ class AcceptedOfferController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        $acceptedOffer = AcceptedOffer::find($id);
+
+        if (!$acceptedOffer) {
+            return response()->json(['message' => 'Not found'], 404);
+        }
+
+        $acceptedOffer->delete();
+
+        return response()->json(['message' => 'Deleted successfully']);
     }
 }

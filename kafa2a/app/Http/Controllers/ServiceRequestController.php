@@ -11,6 +11,8 @@ class ServiceRequestController extends Controller
     public function index()
     {
         $requests = ServiceRequest::with(['service', 'user'])
+            ->where('user_id', auth()->id()) // Only the authenticated user's requests
+            ->where('status', 'pending')     // Only show pending requests
             ->when(request('status'), fn($q, $status) => $q->where('status', $status))
             ->when(request('service_id'), fn($q, $id) => $q->where('service_id', $id))
             ->latest()
