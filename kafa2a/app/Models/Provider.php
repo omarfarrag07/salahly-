@@ -24,5 +24,9 @@ class Provider extends User
         return $this->hasMany(Offer::class);
     }
 
+    public function service()
+    {
+        return $this->hasOne(Service::class, 'provider_id', 'id');
+    }
 
 }

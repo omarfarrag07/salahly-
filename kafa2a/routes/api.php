@@ -100,6 +100,14 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/users/{id}', [AdminController::class, 'deleteUser']);
     });
 
+
+         // Provider specific routes
+         Route::apiResource('provider', ProviderController::class);
+        Route::get('/requests', [ProviderController::class, 'getAllRequests']);         // Get all service requests
+        Route::get('/requests/{id}', [ProviderController::class, 'getRequestByID']);   // view request by id
+        Route::post('/requests/{id}/offer', [ProviderController::class, 'sendOffer']); // send an offer
+    
+=======
     // Accepted Offers
     Route::apiResource('accepted-offers', \App\Http\Controllers\AcceptedOfferController::class)
         ->only(['index', 'show', 'store', 'update', 'destroy']);
