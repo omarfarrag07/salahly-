@@ -56,7 +56,8 @@ class ServiceRequestController extends Controller
         $validated = $request->validate([
             'description' => 'sometimes|string|max:500',
             'location' => 'sometimes|json',
-            'scheduled_at' => 'nullable|date|after:now'
+            'scheduled_at' => 'nullable|date|after:now',
+            'price' => 'sometimes|numeric|min:0',
         ]);
 
         $serviceRequest->update($validated);
