@@ -83,6 +83,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('offers', OfferController::class)->only(['index', 'store', 'show']);
     Route::post('offers/{id}/accept', [OfferController::class, 'accept']);
     Route::post('offers/{id}/reject', [OfferController::class, 'reject']);
+    Route::get('my-request-offers', [OfferController::class, 'offersForMyRequests']);
 
     // Route::apiResource('categories', CategoryController::class);
     Route::apiResource('categories', CategoryController::class)->only(['index', 'show']);
@@ -110,7 +111,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/providers', [AdminController::class, 'allProviders']);
         Route::get('/requests', [AdminController::class, 'allRequests']);
         Route::delete('/users/{id}', [AdminController::class, 'deleteUser']);
-        Route::put('/providers/{id}/review-status', [AdminController::class, 'reviewProviderStatus']);//status of provider
     });
 });
 

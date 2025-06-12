@@ -25,7 +25,8 @@ class ServiceRequestController extends Controller
             'service_id' => 'required|exists:services,id',
             'description' => 'required|string|max:500',
             'location' => 'required|json',
-            'scheduled_at' => 'nullable|date|after:now'
+            'scheduled_at' => 'nullable|date|after:now',
+            'price' => 'required|numeric|min:0',
         ]);
 
         $serviceRequest = auth()->user()->serviceRequests()->create([

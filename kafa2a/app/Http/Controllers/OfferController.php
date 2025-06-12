@@ -64,12 +64,12 @@ class OfferController extends Controller
             'service_request_id' => $offer->service_request_id
         ]);
 
-        event(new ChatStarted([
-            'chat_id' => $acceptedOffer->id,
-            'user_id' => $offer->serviceRequest->user_id,
-            'provider_id' => $offer->provider_id,
-            'service_request_id' => $offer->service_request_id
-        ]));
+        // event(new ChatStarted([
+        //     'chat_id' => $acceptedOffer->id,
+        //     'user_id' => $offer->serviceRequest->user_id,
+        //     'provider_id' => $offer->provider_id,
+        //     'service_request_id' => $offer->service_request_id
+        // ]));
 
         return response()->json([
             'message' => 'Offer accepted and chat started.',
@@ -88,5 +88,19 @@ class OfferController extends Controller
 
         $offer->update(['status' => 'rejected']);
         return response()->json($offer);
+    }
+
+    public function offersForMyRequests(Request $request)
+    {
+        // Get all service requests for the authenticated user (customer)
+        $serviceRequestIds = $request->user()->serviceRequests()->pluck('id');
+
+        // Get all offers for those service requests
+        $offers = Offer::with(['provider', 'serviceRequest'])
+            ->whereIn('service_request_id', $serviceRequestIds)
+            ->latest()
+            ->paginate(10);
+
+        return response()->json($offers);
     }
 }
