@@ -102,5 +102,9 @@ class User extends Authenticatable
     public function payments() {
         return $this->hasMany(Payment::class);
     }
+    public function service()
+    {
+        return $this->hasOne(Service::class, 'provider_id', 'id');
+    }
 
 }
