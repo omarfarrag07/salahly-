@@ -102,7 +102,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
 
          // Provider specific routes
-         Route::apiResource('provider', ProviderController::class);
+        Route::apiResource('provider', ProviderController::class);
         Route::get('/requests', [ProviderController::class, 'getAllRequests']);         // Get all service requests
         Route::get('/requests/{id}', [ProviderController::class, 'getRequestByID']);   // view request by id
         Route::post('/requests/{id}/offer', [ProviderController::class, 'sendOffer']); // send an offer
