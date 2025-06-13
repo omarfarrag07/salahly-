@@ -31,7 +31,8 @@ class RegisteredProviderController extends Controller
         'address' => ['required', 'string', 'max:255'],
         'police_certificate' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
         'selfie' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
-        'gender' => ['required', 'in:M,F'],
+        'phone' => ['required', 'string', 'max:20', 'unique:users,phone'],
+        // 'gender' => ['required', 'in:M,F'],
     ]);
 
     $policePath = $request->file('police_certificate')->store('certificates', 'public');
@@ -44,7 +45,8 @@ class RegisteredProviderController extends Controller
         'service' => $request->service,
         'national_id' => $request->national_id,
         'address' => $request->address,
-        'gender' => $request->gender,
+        'phone' => $request->phone,
+        // 'gender' => $request->gender,
         'police_certificate_path' => $policePath,
         'selfie_path' => $selfiePath,
     ]);
