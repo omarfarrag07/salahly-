@@ -43,7 +43,7 @@ class ProviderController extends Controller
             return response()->json(['error' => 'Unauthorized.'], 403);
         }
     
-        $service = $provider->service()->first(); // call the relationship method directly
+        $service = $provider->service()->first(); 
     
         if (!$service) {
             return response()->json(['error' => 'No service linked.'], 404);
@@ -55,19 +55,42 @@ class ProviderController extends Controller
     
         return response()->json($requests);
 }
+public function getRequestByID($id)
+{
+    $provider = auth()->user();
+    $service = $provider->service()->first();
+    
+    if (!$provider->isProvider()) {
+        return response()->json(['error' => 'Unauthorized.'], 403);
+    }
+
+    if (!$service) {
+        return response()->json(['error' => 'No service linked.'], 404);
+    }
+
+    $serviceRequest = $service->requests()
+        ->with(['user', 'offers'])
+        ->findOrFail($id);
+
+    return response()->json($serviceRequest);
+}
     
 
 
 public function sendOffer(Request $request, $id)
 {
     $provider = auth()->user();
+    $service = $provider->service;
+    if (!$provider->isProvider()) {
+        return response()->json(['error' => 'Unauthorized.'], 403);
+    }
 
     $request->validate([
         'price' => 'required|numeric|min:0',
         'message' => 'nullable|string|max:1000',
     ]);
 
-    $service = $provider->service;
+   
 
     if (!$service) {
         return response()->json(['error' => 'No service linked.'], 404);
