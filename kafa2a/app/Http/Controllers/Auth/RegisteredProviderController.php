@@ -52,10 +52,17 @@ class RegisteredProviderController extends Controller
     ]);
 
     event(new Registered($provider));
-    
-    // Auth::login($provider);
 
-    return response()->json($provider, 201);
+    // Automatically log in the provider
+    Auth::login($provider);
+
+    // Return token for API usage
+    $token = $provider->createToken('api-token')->plainTextToken;
+
+    return response()->json([
+        'user' => $provider,
+        'token' => $token,
+    ], 201);
 }
 }
 
