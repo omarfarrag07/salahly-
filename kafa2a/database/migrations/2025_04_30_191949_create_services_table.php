@@ -17,7 +17,7 @@ return new class extends Migration
             $table->text('description')->nullable();
 
             $table->foreignId('category_id')->constrained()->onDelete('cascade');
-            $table->foreignId('provider_id')->constrained('users')->onDelete('cascade');
+            // $table->foreignId('provider_id')->constrained('users')->onDelete('cascade');
             
             $table->timestamps();
 

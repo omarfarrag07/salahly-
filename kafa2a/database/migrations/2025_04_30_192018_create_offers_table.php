@@ -13,7 +13,7 @@ return new class extends Migration {
         Schema::create('offers', function (Blueprint $table) {
             $table->id();
             $table->foreignId('service_request_id')->constrained()->onDelete('cascade');
-            $table->foreignId('provider_id')->constrained()->onDelete('cascade');
+            $table->foreignId('provider_id')->constrained('users')->onDelete('cascade');
             $table->decimal('price', 10, 2);
             $table->text('message')->nullable();
             $table->string('status')->default('pending');

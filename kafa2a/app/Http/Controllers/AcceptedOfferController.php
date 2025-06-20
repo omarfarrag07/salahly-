@@ -12,13 +12,13 @@ class AcceptedOfferController extends Controller
      */
     public function index()
     {
-        $acceptedOffers = AcceptedOffer::with(['offer.provider', 'serviceRequest.user'])->paginate(10);
+        $acceptedOffers = AcceptedOffer::with(['offer.provider', 'request.user'])->paginate(10);
         return response()->json($acceptedOffers);
     }
 
     public function showByRequest($requestId)
     {
-        $accepted = AcceptedOffer::with(['offer.provider', 'serviceRequest.user'])
+        $accepted = AcceptedOffer::with(['offer.provider', 'request.user'])
             ->where('service_request_id', $requestId)
             ->first();
 
@@ -31,7 +31,7 @@ class AcceptedOfferController extends Controller
 
     public function acceptedOfferforUser($userId)
     {
-        $acceptedOffers = AcceptedOffer::with(['offer.provider', 'serviceRequest.user'])
+        $acceptedOffers = AcceptedOffer::with(['offer.provider', 'request.user'])
             ->whereHas('serviceRequest', function ($query) use ($userId) {
                 $query->where('user_id', $userId);
             })
@@ -65,7 +65,7 @@ class AcceptedOfferController extends Controller
      */
     public function show(string $id)
     {
-        $acceptedOffer = AcceptedOffer::with(['offer.provider', 'serviceRequest.user'])->find($id);
+        $acceptedOffer = AcceptedOffer::with(['offer.provider', 'request.user'])->find($id);
 
         if (!$acceptedOffer) {
             return response()->json(['message' => 'Not found'], 404);

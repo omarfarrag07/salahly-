@@ -25,6 +25,7 @@ class DatabaseSeeder extends Seeder
             'Cleaning' => ['Home Cleaning', 'Office Cleaning'],
             'Plumbing' => ['Leak Repair', 'Pipe Installation'],
             'Electrical' => ['Wiring', 'Light Installation'],
+            'others' => ['others']
         ];
 
         foreach ($categories as $catName => $services) {
