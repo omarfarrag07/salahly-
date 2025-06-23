@@ -21,12 +21,24 @@ class ServiceRequestController extends Controller
         return response()->json($requests);
     }
 
+
+    public function showAllRequests()
+    {
+        $requests = ServiceRequest::with(['service', 'user'])
+            ->where('user_id', auth()->id()) // Only the authenticated user's requests
+            ->latest()
+            ->paginate(10);
+
+        return response()->json($requests);
+    }
+
     public function store(Request $request)
     {
         $validated = $request->validate([
             'service_id' => 'required|exists:services,id',
             'description' => 'required|string|max:500',
             'location' => 'required|json',
+            'title' => 'required|string|max:255',
             'scheduled_at' => 'nullable|date|after:now',
             'price' => 'required|numeric|min:0',
         ]);
@@ -55,6 +67,7 @@ class ServiceRequestController extends Controller
 
         $validated = $request->validate([
             'description' => 'sometimes|string|max:500',
+            'title' => 'sometimes|string|max:255',
             'location' => 'sometimes|json',
             'scheduled_at' => 'nullable|date|after:now',
             'price' => 'sometimes|numeric|min:0',
@@ -88,7 +101,7 @@ class ServiceRequestController extends Controller
 
         AcceptedOffer::create([
             'service_request_id' => $request->id,
-            'provider_id' => auth()->id(), 
+            'provider_id' => auth()->id(),
         ]);
         //ToDo: Notify the user about the acceptance
         // event(new RequestAccepted($request)); // you can define this event similarly

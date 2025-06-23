@@ -69,6 +69,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Service Requests
     Route::apiResource('service-requests', ServiceRequestController::class);
+    Route::get('all-my-service-requests', [ServiceRequestController::class, 'showAllRequests']);
     Route::post('service-requests/{request}/accept', [ServiceRequestController::class, 'accept']);
     Route::post('service-requests/{request}/cancel', [ServiceRequestController::class, 'cancel']);
     Route::post('service-requests/{request}/complete', [ServiceRequestController::class, 'complete']);
@@ -77,7 +78,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('offers', OfferController::class)->only(['index', 'store', 'show']);
     Route::post('offers/{id}/accept', [OfferController::class, 'accept']);
     Route::post('offers/{id}/reject', [OfferController::class, 'reject']);
-    Route::get('my-request-offers', [OfferController::class, 'offersForMyRequests']);
+    Route::get('my-request
+    -offers', [OfferController::class, 'offersForMyRequests']);
 
     // Categories
     Route::apiResource('categories', CategoryController::class)->only(['index', 'show']);
