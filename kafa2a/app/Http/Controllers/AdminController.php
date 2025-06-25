@@ -12,7 +12,7 @@ class AdminController extends Controller
 {
     public function dashboard()
     {
-        $usersCount = User::count();
+        $usersCount = User::where('type','user')->count();
         $providersCount = User::where('type', 'Provider')->count();
         $requestsCount = ServiceRequest::count();
         $offersCount = Offer::count();
@@ -42,25 +42,53 @@ class AdminController extends Controller
         $User = User::where('type', 'user')->findOrFail($id);
         return response()->json($User);
     }
+ 
+    
     public function getProviderById($id)
     {
         $provider = User::where('type', 'Provider')->findOrFail($id);
         return response()->json($provider);
     }
-
-
-    public function allRequests()
-    {
-        $requests = ServiceRequest::with(['user', 'service'])->latest()->paginate(10);
-        return response()->json($requests);
-    }
-
     public function deleteUser($id)
     {
         $user = User::findOrFail($id);
         $user->delete();
 
         return response()->json(['message' => 'User deleted']);
+    }
+
+
+    public function countOfUsers()
+    {
+        $usersCount = User::where('type', 'user')->count();
+        return response()->json(['users' => $usersCount]);
+       
+    }
+    public function countOfProviders()
+    {
+
+        $providersCount = User::where('type', 'Provider')->count();
+        return response()->json([ 'providers' => $providersCount]);
+    }
+    public function getPendingProviders()
+    {
+        $providers = User::where('type', 'Provider')->where('status', 'pending')->latest()->get();
+        return response()->json($providers);
+    }
+    // public function getAcceptedRequests()
+    // {
+    //     $requests = ServiceRequest::with(['user', 'service'])->latest()->paginate(10);
+    //     return response()->json($requests);
+    // }
+
+    public function allRequests()
+    {
+        $requests = ServiceRequest::with(['user', 'service'])->latest()->paginate(10);
+        return response()->json($requests);
+    }
+    public function getRequestByID($id){
+    $request = ServiceRequest::with(['user', 'service', 'offers'])->findOrFail($id);
+    return response()->json($request);
     }
     
     public function reviewProviderStatus(Request $request, $id)
@@ -77,11 +105,12 @@ class AdminController extends Controller
         }
     
         $suspendReason = $request->input('suspend_reason');
-        if ($status === 'suspended' && (empty($suspendReason) || strlen($suspendReason) > 1000)) {
+        if ($status === 'suspended' && (empty($suspendReason))) {
             return response()->json([
                 'error' => 'Suspension reason is required and must be less than 1000 characters.'
             ], 422);
         }
+
     
         $provider->status = $status;
         $provider->suspend_reason = $status === 'suspended' ? $suspendReason : null;
