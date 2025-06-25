@@ -79,11 +79,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('offers', OfferController::class)->only(['index', 'store', 'show']);
     Route::post('offers/{id}/accept', [OfferController::class, 'accept']);
     Route::post('offers/{id}/reject', [OfferController::class, 'reject']);
-    Route::get('my-request
-    -offers', [OfferController::class, 'offersForMyRequests']);
+    Route::get('my-request-offers', [OfferController::class, 'offersForMyRequests']);
 
-    // Categories
-    Route::apiResource('categories', CategoryController::class)->only(['index', 'show']);
+  
     // Route::middleware('admin')->group(function () {
     //     Route::post('categories', [CategoryController::class, 'store']);
     //     Route::put('categories/{id}', [CategoryController::class, 'update']);
@@ -134,6 +132,8 @@ Route::middleware('auth:sanctum')->group(function () {
     // Route::apiResource('services', ServiceController::class);
 });
 
+  // Categories
+  Route::apiResource('categories', CategoryController::class)->only(['index', 'show']);
 
 //admin routes
 //tested
@@ -144,10 +144,13 @@ Route::middleware('auth:sanctum')->group(function () {
    Route::get('/Provider/{id}', [AdminController::class, 'getProviderById']);
    Route::get('/dashboard', [AdminController::class, 'dashboard']);
    Route::delete('/delete/users/{id}', [AdminController::class, 'deleteUser']);
-
-
-  //working but not tested with requests
+   Route::get('/Users/count', [AdminController::class, 'countOfUsers']);
+   Route::get('/Providers/count', [AdminController::class, 'countOfProviders']);
+   Route::get('/Providers/pending', [AdminController::class, 'getPendingProviders']);
    Route::get('/requests', [AdminController::class, 'allRequests']);
+   Route::get('/request/{id}', [AdminController::class, 'getRequestByID']);
+
+
 
 
 //////////////////////////////////////////////////////////////////

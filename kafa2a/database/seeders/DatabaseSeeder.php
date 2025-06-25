@@ -30,6 +30,25 @@ class DatabaseSeeder extends Seeder
                 'email_verified_at' => now(),
             ]
         );
+         // Categories and related services
+         $categories = [
+            'Cleaning' => ['Home Cleaning', 'Office Cleaning'],
+            'Plumbing' => ['Leak Repair', 'Pipe Installation'],
+            'Electrical' => ['Wiring', 'Light Installation'],
+            'others' => ['others']
+        ];
+              foreach ($categories as $catName => $services) {
+            $category = Category::create(['name' => $catName]);
+            foreach ($services as $serviceName) {
+                Service::create([
+                    'name' => $serviceName,
+                    'category_id' => $category->id,
+                ]);
+            }
+        }
+    }
+
+
     }
     // public function run(): void
     // {
@@ -39,22 +58,7 @@ class DatabaseSeeder extends Seeder
     //     //     'email' => 'test@example.com',
     //     // ]);
 
-    //     // Categories and related services
-    //     $categories = [
-    //         'Cleaning' => ['Home Cleaning', 'Office Cleaning'],
-    //         'Plumbing' => ['Leak Repair', 'Pipe Installation'],
-    //         'Electrical' => ['Wiring', 'Light Installation'],
-    //         'others' => ['others']
-    //     ];
+       
 
-    //     foreach ($categories as $catName => $services) {
-    //         $category = Category::create(['name' => $catName]);
-    //         foreach ($services as $serviceName) {
-    //             Service::create([
-    //                 'name' => $serviceName,
-    //                 'category_id' => $category->id,
-    //             ]);
-    //         }
-    //     }
-    // }
-}
+  
+
