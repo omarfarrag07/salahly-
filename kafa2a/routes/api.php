@@ -11,6 +11,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\ProviderController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ServiceController;
+
 use App\Models\User;
 use Illuminate\Validation\ValidationException;
 
@@ -83,24 +84,33 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Categories
     Route::apiResource('categories', CategoryController::class)->only(['index', 'show']);
-    Route::middleware('admin')->group(function () {
-        Route::post('categories', [CategoryController::class, 'store']);
-        Route::put('categories/{id}', [CategoryController::class, 'update']);
-        Route::delete('categories/{id}', [CategoryController::class, 'destroy']);
-    });
+    // Route::middleware('admin')->group(function () {
+    //     Route::post('categories', [CategoryController::class, 'store']);
+    //     Route::put('categories/{id}', [CategoryController::class, 'update']);
+    //     Route::delete('categories/{id}', [CategoryController::class, 'destroy']);
+
+
+    //     Route::get('/dashboard', [AdminController::class, 'dashboard']);
+    //     Route::get('/users', [AdminController::class, 'allUsers']);
+    //     Route::get('/providers', [AdminController::class, 'allProviders']);
+    //     Route::get('/requests', [AdminController::class, 'allRequests']);
+    //     Route::delete('/users/{id}', [AdminController::class, 'deleteUser']);
+        
+    //     Route::post('/provider/{userId}/review', [AdminController::class, 'reviewProviderStatus']);
+    // });
 
     // Ratings & Messages
     Route::apiResource('ratings', RatingController::class)->only(['index', 'store']);
     Route::apiResource('messages', MessageController::class)->only(['index', 'store']);
 
     // Admin Routes
-    Route::prefix('admin')->middleware('admin')->group(function () {
-        Route::get('/dashboard', [AdminController::class, 'dashboard']);
-        Route::get('/users', [AdminController::class, 'allUsers']);
-        Route::get('/providers', [AdminController::class, 'allProviders']);
-        Route::get('/requests', [AdminController::class, 'allRequests']);
-        Route::delete('/users/{id}', [AdminController::class, 'deleteUser']);
-    });
+    // Route::prefix('admin')->middleware(['auth', 'admin'])->group(function () {
+    //     Route::get('/dashboard', [AdminController::class, 'dashboard']);
+    //     Route::get('/users', [AdminController::class, 'allUsers']);
+    //     Route::get('/providers', [AdminController::class, 'allProviders']);
+    //     Route::get('/requests', [AdminController::class, 'allRequests']);
+    //     Route::delete('/users/{id}', [AdminController::class, 'deleteUser']);
+    // });
 
 
          // Provider specific routes
@@ -123,6 +133,22 @@ Route::middleware('auth:sanctum')->group(function () {
     // // Example for future: Services
     // Route::apiResource('services', ServiceController::class);
 });
+
+
+//admin routes
+//tested
+   Route::get('users', [AdminController::class, 'allUsers']);
+   Route::get('/providers', [AdminController::class, 'allProviders']);
+   Route::post('/provider/{userId}/review', [AdminController::class, 'reviewProviderStatus']);
+   Route::get('/User/{id}', [AdminController::class, 'getUserById']);
+   Route::get('/Provider/{id}', [AdminController::class, 'getProviderById']);
+   Route::get('/dashboard', [AdminController::class, 'dashboard']);
+   Route::delete('/delete/users/{id}', [AdminController::class, 'deleteUser']);
+
+
+  //working but not tested with requests
+   Route::get('/requests', [AdminController::class, 'allRequests']);
+
 
 //////////////////////////////////////////////////////////////////
 // Token Login Route (API only)

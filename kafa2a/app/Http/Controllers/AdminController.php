@@ -27,7 +27,7 @@ class AdminController extends Controller
 
     public function allUsers()
     {
-        $users = User::where('type', 'User')->latest()->paginate(10);
+        $users = User::where('type', 'user')->latest()->paginate(10);
         return response()->json($users);
     }
 
@@ -36,6 +36,18 @@ class AdminController extends Controller
         $providers = User::where('type', 'Provider')->latest()->paginate(10);
         return response()->json($providers);
     }
+    public function getUserById($id)
+    {
+
+        $User = User::where('type', 'user')->findOrFail($id);
+        return response()->json($User);
+    }
+    public function getProviderById($id)
+    {
+        $provider = User::where('type', 'Provider')->findOrFail($id);
+        return response()->json($provider);
+    }
+
 
     public function allRequests()
     {
@@ -51,30 +63,33 @@ class AdminController extends Controller
         return response()->json(['message' => 'User deleted']);
     }
     
-    public function reviewProviderStatus(Request $request, $userId)
+    public function reviewProviderStatus(Request $request, $id)
     {
-        $request->validate([
-            'status' => 'required|in:accepted,refused,suspended',
-            'suspend_reason' => 'nullable|string|max:1000',
-        ]);
+        $provider = User::where('type', 'Provider')->findOrFail($id);
     
-        $user = User::where('type', 'Provider')->findOrFail($userId);
-        $provider = $user->provider;
+        $allowedStatuses = ['pending', 'accepted', 'rejected', 'suspended'];
+        $status = $request->input('status');
     
-        if (!$provider) {
-            return response()->json(['error' => 'Provider profile not found.'], 404);
+        if (!$status || !in_array($status, $allowedStatuses)) {
+            return response()->json([
+                'error' => 'Invalid status. Allowed values are: pending, accepted, rejected, suspended.'
+            ], 422);
         }
     
-        if ($request->status === 'suspended' && empty($request->suspend_reason)) {
-            return response()->json(['error' => 'Suspension reason is required.'], 422);
+        $suspendReason = $request->input('suspend_reason');
+        if ($status === 'suspended' && (empty($suspendReason) || strlen($suspendReason) > 1000)) {
+            return response()->json([
+                'error' => 'Suspension reason is required and must be less than 1000 characters.'
+            ], 422);
         }
     
-        $provider->status = $request->status;
-        $provider->suspend_reason = $request->status === 'suspended' ? $request->suspend_reason : null;
+        $provider->status = $status;
+        $provider->suspend_reason = $status === 'suspended' ? $suspendReason : null;
         $provider->save();
     
-        return response()->json(['message' => 'Provider status updated successfully.']);
+        return response()->json([
+            'message' => 'Provider status updated successfully.'
+        ]);
     }
     
-
 }
