@@ -7,6 +7,7 @@ use App\Models\Provider;
 use App\Models\ServiceRequest;
 use App\Models\Offer;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 
 class AdminController extends Controller
 {
@@ -75,12 +76,43 @@ class AdminController extends Controller
         $providers = User::where('type', 'Provider')->where('status', 'pending')->latest()->get();
         return response()->json($providers);
     }
-    // public function getAcceptedRequests()
-    // {
-    //     $requests = ServiceRequest::with(['user', 'service'])->latest()->paginate(10);
-    //     return response()->json($requests);
-    // }
+    
+    public function createProvider(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email',
+            'password' => 'required|string|min:6',
+            'service' => 'required|string|max:255',
+            'national_id' => 'required|string|max:20|unique:users,national_id',
+            'address' => 'required|string|max:255',
+            'phone' => 'required|string|max:20',
+            'police_certificate' => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048',
+            'selfie' => 'required|file|mimes:jpg,jpeg,png|max:2048',
+        ]);
 
+        $policePath = $request->file('police_certificate')->store('police_certificates', 'public');
+        $selfiePath = $request->file('selfie')->store('selfies', 'public');
+
+        $provider = User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+            'service' => $request->service,
+            'national_id' => $request->national_id,
+            'address' => $request->address,
+            'phone' => $request->phone,
+            'type' => 'Provider',
+            'status' => 'accepted',
+            'police_certificate_path' => $policePath,
+            'selfie_path' => $selfiePath,
+        ]);
+
+        return response()->json([
+            'message' => 'Provider created successfully.',
+            'provider' => $provider
+        ], 201);
+    }
     public function allRequests()
     {
         $requests = ServiceRequest::with(['user', 'service'])->latest()->paginate(10);

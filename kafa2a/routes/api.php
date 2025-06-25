@@ -149,6 +149,8 @@ Route::middleware('auth:sanctum')->group(function () {
    Route::get('/Providers/pending', [AdminController::class, 'getPendingProviders']);
    Route::get('/requests', [AdminController::class, 'allRequests']);
    Route::get('/request/{id}', [AdminController::class, 'getRequestByID']);
+   Route::post('/Providers/create', [AdminController::class, 'createProvider']);
+
 
 
 
