@@ -85,9 +85,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
   
     // Route::middleware('admin')->group(function () {
-    //     Route::post('categories', [CategoryController::class, 'store']);
-    //     Route::put('categories/{id}', [CategoryController::class, 'update']);
-    //     Route::delete('categories/{id}', [CategoryController::class, 'destroy']);
+ 
 
 
     //     Route::get('/dashboard', [AdminController::class, 'dashboard']);
@@ -154,17 +152,22 @@ Route::middleware('auth:sanctum')->group(function () {
    Route::post('/Providers/create', [AdminController::class, 'createProvider']);
    Route::get('/Offers', [AdminController::class, 'getAllOffers']);
 
-// Category Routes
-Route::post('/category/create', [AdminController::class, 'CreateCategory']);
-Route::get('/category/{id}', [AdminController::class, 'getCategoryById']);
-Route::put('/category/{id}', [AdminController::class, 'UpdateCategory']);
-Route::delete('/category/{id}', [AdminController::class, 'deleteCategory']);
 
-// Service Routes
-Route::post('/service/create', [AdminController::class, 'createService']);
-Route::get('/service/{id}', [AdminController::class, 'getServiceById']);
-Route::put('/service/{id}', [AdminController::class, 'updateService']);
-Route::delete('/service/{id}', [AdminController::class, 'deleteService']);
+   Route::prefix('category')->group(function () {
+       Route::get('/', [CategoryController::class, 'index']);              // List all categories
+       Route::get('/{id}', [CategoryController::class, 'show']);           // Get one category
+       Route::post('/create', [CategoryController::class, 'store']);             // Create a category
+       Route::put('/{id}', [CategoryController::class, 'update']);         // Update a category
+       Route::delete('/{id}', [CategoryController::class, 'destroy']);     // Delete a category
+   });
+   
+   Route::prefix('service')->group(function () {
+    Route::get('/', [ServiceController::class, 'index']);               // List all services
+    Route::get('/{id}', [ServiceController::class, 'show']);            // Get one service
+    Route::post('/create', [ServiceController::class, 'store']);              // Create a service
+    Route::put('/{id}', [ServiceController::class, 'update']);          // Update a service
+    Route::delete('/{id}', [ServiceController::class, 'destroy']);      // Delete a service
+});
 
 
 
