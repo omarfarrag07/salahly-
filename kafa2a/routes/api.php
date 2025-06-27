@@ -141,7 +141,7 @@ Route::middleware('auth:sanctum')->group(function () {
 //tested
    Route::get('users', [AdminController::class, 'allUsers']);
    Route::get('/providers', [AdminController::class, 'allProviders']);
-   Route::post('/provider/{userId}/review', [AdminController::class, 'reviewProviderStatus']);
+   Route::PUT('/provider/{userId}/review', [AdminController::class, 'reviewProviderStatus']);
    Route::get('/User/{id}', [AdminController::class, 'getUserById']);
    Route::get('/Provider/{id}', [AdminController::class, 'getProviderById']);
    Route::get('/dashboard', [AdminController::class, 'dashboard']);
