@@ -26,7 +26,6 @@ class DatabaseSeeder extends Seeder
                 'type' => 'admin',
                 'phone' => '1234567890',
                 'address' => 'Admin HQ',
-                'status' => 'accepted',
                 'email_verified_at' => now(),
             ]
         );
