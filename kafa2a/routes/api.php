@@ -11,6 +11,8 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\ProviderController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ServiceController;
+use App\Models\AcceptedOffer;
+
 
 use App\Models\User;
 use Illuminate\Validation\ValidationException;
@@ -150,6 +152,21 @@ Route::middleware('auth:sanctum')->group(function () {
    Route::get('/requests', [AdminController::class, 'allRequests']);
    Route::get('/request/{id}', [AdminController::class, 'getRequestByID']);
    Route::post('/Providers/create', [AdminController::class, 'createProvider']);
+   Route::get('/Offers', [AdminController::class, 'getAllOffers']);
+
+// Category Routes
+Route::post('/category/create', [AdminController::class, 'CreateCategory']);
+Route::get('/category/{id}', [AdminController::class, 'getCategoryById']);
+Route::put('/category/{id}', [AdminController::class, 'UpdateCategory']);
+Route::delete('/category/{id}', [AdminController::class, 'deleteCategory']);
+
+// Service Routes
+Route::post('/service/create', [AdminController::class, 'createService']);
+Route::get('/service/{id}', [AdminController::class, 'getServiceById']);
+Route::put('/service/{id}', [AdminController::class, 'updateService']);
+Route::delete('/service/{id}', [AdminController::class, 'deleteService']);
+
+
 
 
 

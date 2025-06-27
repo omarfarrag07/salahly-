@@ -6,8 +6,12 @@ use App\Models\User;
 use App\Models\Provider;
 use App\Models\ServiceRequest;
 use App\Models\Offer;
+use App\Models\AcceptedOffer;
+use App\Models\Category;
+use App\Models\Service;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+
 
 class AdminController extends Controller
 {
@@ -15,14 +19,12 @@ class AdminController extends Controller
     {
         $usersCount = User::where('type','user')->count();
         $providersCount = User::where('type', 'Provider')->count();
-        $requestsCount = ServiceRequest::count();
-        $offersCount = Offer::count();
+        $PendingProvidersCount = User::where('type', 'Provider')->where('status', 'pending')->count();     
 
         return response()->json([
             'users' => $usersCount,
             'providers' => $providersCount,
-            'requests' => $requestsCount,
-            'offers' => $offersCount
+            'PendingProviders'=>$PendingProvidersCount
         ]);
     }
 
@@ -103,7 +105,7 @@ class AdminController extends Controller
             'address' => $request->address,
             'phone' => $request->phone,
             'type' => 'Provider',
-            'status' => 'accepted',
+            'status' => 'approved',
             'police_certificate_path' => $policePath,
             'selfie_path' => $selfiePath,
         ]);
@@ -127,12 +129,12 @@ class AdminController extends Controller
     {
         $provider = User::where('type', 'Provider')->findOrFail($id);
     
-        $allowedStatuses = ['pending', 'accepted', 'rejected', 'suspended'];
+        $allowedStatuses = ['pending', 'approved', 'rejected', 'suspended'];
         $status = $request->input('status');
     
         if (!$status || !in_array($status, $allowedStatuses)) {
             return response()->json([
-                'error' => 'Invalid status. Allowed values are: pending, accepted, rejected, suspended.'
+                'error' => 'Invalid status. Allowed values are: pending, approved, rejected, suspended.'
             ], 422);
         }
     
@@ -152,5 +154,90 @@ class AdminController extends Controller
             'message' => 'Provider status updated successfully.'
         ]);
     }
+    public function getAllOffers()
+    {
+        $accepted = AcceptedOffer::with(['offer.provider', 'request.user'])->latest()->get();
+    
+        $unaccepted = Offer::whereNotIn('id', AcceptedOffer::pluck('offer_id'))
+            ->with('provider')
+            ->latest()
+            ->get();
+    
+        return response()->json([
+            'accepted_offers' => $accepted,
+            'unaccepted_offers' => $unaccepted
+        ]);
+    }
+    public function CreateCategory(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+        ]);
+
+        $category = Category::create($validated);
+        return response()->json($category, 201);
+    }
+    public function getCategoryById($id)
+    {
+        $category = Category::with('services')->findOrFail($id);
+        return response()->json($category);
+    }
+
+
+ 
+    public function UpdateCategory(Request $request, $id)
+    {
+        $category = Category::findOrFail($id);
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+        ]);
+
+        $category->update($validated);
+        return response()->json($category);
+    }
+
+    public function deleteCategory($id)
+    {
+        $category = Category::findOrFail($id);
+        $category->delete();
+        return response()->json(['message' => 'Category deleted']);
+    }
+    public function createService(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'category_id' => 'required|exists:categories,id',
+        ]);
+
+        $service = Service::create($validated);
+        return response()->json($service, 201);
+    }
+
+    public function getServiceById($id)
+    {
+        $service = Service::findOrFail($id);
+        return response()->json($service);
+    }
+
+    public function updateService(Request $request, $id)
+    {
+        $service = Service::findOrFail($id);
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'category_id' => 'required|exists:categories,id',
+        ]);
+
+        $service->update($validated);
+        return response()->json($service);
+    }
+
+    public function deleteService($id)
+    {
+        $service = Service::findOrFail($id);
+        $service->delete();
+        return response()->json(['message' => 'Service deleted']);
+    }
+
+
     
 }

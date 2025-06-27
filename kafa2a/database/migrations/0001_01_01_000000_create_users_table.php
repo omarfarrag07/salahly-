@@ -26,7 +26,7 @@ return new class extends Migration
             $table->string('gender')->nullable();
             // $table->enum('gender', ['M', 'F']);
             $table->string('service')->nullable(); // For Providers
-            $table->enum('status', ['pending', 'accepted', 'rejected', 'suspended'])->default('pending')->nullable();
+            $table->enum('status', ['pending', 'approved', 'rejected', 'suspended'])->default('pending')->nullable();
             $table->text('suspend_reason')->nullable();
             $table->rememberToken();
             $table->timestamps();
