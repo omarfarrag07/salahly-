@@ -28,13 +28,13 @@ class AdminController extends Controller
         ]);
     }
 
-    public function allUsers()
+    public function getAllUsers()
     {
         $users = User::where('type', 'user')->latest()->paginate(10);
         return response()->json($users);
     }
 
-    public function allProviders()
+    public function getAllProviders()
     {
         $providers = User::where('type', 'Provider')->latest()->paginate(10);
         return response()->json($providers);
@@ -115,12 +115,12 @@ class AdminController extends Controller
             'provider' => $provider
         ], 201);
     }
-    public function allRequests()
+    public function getAllServiceRequests()
     {
         $requests = ServiceRequest::with(['user', 'service'])->latest()->paginate(10);
         return response()->json($requests);
     }
-    public function getRequestByID($id){
+    public function getServiceRequestById($id){
     $request = ServiceRequest::with(['user', 'service', 'offers'])->findOrFail($id);
     return response()->json($request);
     }
