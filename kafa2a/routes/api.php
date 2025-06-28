@@ -137,36 +137,46 @@ Route::middleware('auth:sanctum')->group(function () {
 
 //admin routes
 //tested
-   Route::get('users', [AdminController::class, 'allUsers']);
-   Route::get('/providers', [AdminController::class, 'allProviders']);
-   Route::PUT('/provider/{userId}/review', [AdminController::class, 'reviewProviderStatus']);
-   Route::get('/User/{id}', [AdminController::class, 'getUserById']);
-   Route::get('/Provider/{id}', [AdminController::class, 'getProviderById']);
-   Route::get('/dashboard', [AdminController::class, 'dashboard']);
-   Route::delete('/delete/users/{id}', [AdminController::class, 'deleteUser']);
-   Route::get('/Users/count', [AdminController::class, 'countOfUsers']);
-   Route::get('/Providers/count', [AdminController::class, 'countOfProviders']);
-   Route::get('/Providers/pending', [AdminController::class, 'getPendingProviders']);
-   Route::get('/requests', [AdminController::class, 'allRequests']);
-   Route::get('/request/{id}', [AdminController::class, 'getRequestByID']);
-   Route::post('/Providers/create', [AdminController::class, 'createProvider']);
-   Route::get('/Offers', [AdminController::class, 'getAllOffers']);
 
+//AdminController routes (User & Provider Management)
+Route::get('/Users', [AdminController::class, 'getAllUsers']);
+Route::get('/Users/{id}', [AdminController::class, 'getUserById']);
+Route::delete('/Users/{id}', [AdminController::class, 'deleteUser']);
+Route::get('/users-count', [AdminController::class, 'countOfUsers']);
 
-   Route::prefix('category')->group(function () {
-       Route::get('/', [CategoryController::class, 'index']);              // List all categories
-       Route::get('/{id}', [CategoryController::class, 'show']);           // Get one category
-       Route::post('/create', [CategoryController::class, 'store']);             // Create a category
-       Route::put('/{id}', [CategoryController::class, 'update']);         // Update a category
-       Route::delete('/{id}', [CategoryController::class, 'destroy']);     // Delete a category
-   });
-   
-   Route::prefix('service')->group(function () {
-    Route::get('/', [ServiceController::class, 'index']);               // List all services
-    Route::get('/{id}', [ServiceController::class, 'show']);            // Get one service
-    Route::post('/create', [ServiceController::class, 'store']);              // Create a service
-    Route::put('/{id}', [ServiceController::class, 'update']);          // Update a service
-    Route::delete('/{id}', [ServiceController::class, 'destroy']);      // Delete a service
+Route::get('/Providers', [AdminController::class, 'getAllProviders']);
+Route::get('/Providers/{id}', [AdminController::class, 'getProviderById']);
+Route::put('/Providers/{userId}/review', [AdminController::class, 'reviewProviderStatus']);
+Route::get('/providers-count', [AdminController::class, 'countOfProviders']);
+Route::get('/Providers-pending', [AdminController::class, 'getPendingProviders']);
+Route::post('/providers', [AdminController::class, 'createProvider']);
+
+// Dashboard
+Route::get('/dashboard', [AdminController::class, 'dashboard']);
+
+// Requests
+Route::get('/Requests', [AdminController::class, 'getAllServiceRequests']);
+Route::get('/requests/{id}', [AdminController::class, 'getServiceRequestById']);
+
+//  Offers
+Route::get('/offers', [AdminController::class, 'getAllOffers']);
+
+// Category Routes
+Route::prefix('categories')->group(function () {
+    Route::get('/', [CategoryController::class, 'index']);
+    Route::get('/{id}', [CategoryController::class, 'show']);
+    Route::post('/', [CategoryController::class, 'store']);
+    Route::put('/{id}', [CategoryController::class, 'update']);
+    Route::delete('/{id}', [CategoryController::class, 'destroy']);
+});
+
+//  Service Routes
+Route::prefix('services')->group(function () {
+    Route::get('/', [ServiceController::class, 'index']);
+    Route::get('/{id}', [ServiceController::class, 'show']);
+    Route::post('/', [ServiceController::class, 'store']);
+    Route::put('/{id}', [ServiceController::class, 'update']);
+    Route::delete('/{id}', [ServiceController::class, 'destroy']);
 });
 
 
