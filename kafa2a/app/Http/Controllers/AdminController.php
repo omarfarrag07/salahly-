@@ -18,7 +18,7 @@ class AdminController extends Controller
     public function dashboard()
     {
         $usersCount = User::where('type','user')->count();
-        $providersCount = User::where('type', 'Provider')->count();
+        $providersCount = User::where('type', 'Provider')->where('status', 'approved')->count();
         $PendingProvidersCount = User::where('type', 'Provider')->where('status', 'pending')->count();     
 
         return response()->json([
