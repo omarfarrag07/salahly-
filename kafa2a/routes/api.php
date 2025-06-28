@@ -156,7 +156,7 @@ Route::get('/dashboard', [AdminController::class, 'dashboard']);
 
 // Requests
 Route::get('/Requests', [AdminController::class, 'getAllServiceRequests']);
-Route::get('/requests/{id}', [AdminController::class, 'getServiceRequestById']);
+Route::get('/Requests/{id}', [AdminController::class, 'getServiceRequestById']);
 
 //  Offers
 Route::get('/offers', [AdminController::class, 'getAllOffers']);
