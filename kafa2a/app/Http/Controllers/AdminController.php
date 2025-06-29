@@ -45,7 +45,6 @@ class AdminController extends Controller
         $User = User::where('type', 'user')->findOrFail($id);
         return response()->json($User);
     }
- 
     
     public function getProviderById($id)
     {
@@ -64,12 +63,10 @@ class AdminController extends Controller
     public function countOfUsers()
     {
         $usersCount = User::where('type', 'user')->count();
-        return response()->json(['users' => $usersCount]);
-       
+        return response()->json(['users' => $usersCount]);      
     }
     public function countOfProviders()
     {
-
         $providersCount = User::where('type', 'Provider')->count();
         return response()->json([ 'providers' => $providersCount]);
     }
