@@ -68,7 +68,9 @@ class ServiceRequestController extends Controller
         $validated = $request->validate([
             'description' => 'sometimes|string|max:500',
             'title' => 'sometimes|string|max:255',
-            'location' => 'sometimes|json',
+            'lat' => 'sometimes|string|max:20',
+            'lng' => 'sometimes|string|max:20',
+            'address' => 'sometimes|string',
             'scheduled_at' => 'nullable|date|after:now',
             'price' => 'sometimes|numeric|min:0',
         ]);
@@ -98,7 +100,6 @@ class ServiceRequestController extends Controller
     public function accept(ServiceRequest $request)
     {
         $request->update(['status' => 'accepted']);
-
         AcceptedOffer::create([
             'service_request_id' => $request->id,
             'provider_id' => auth()->id(),

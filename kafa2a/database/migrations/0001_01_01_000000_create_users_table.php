@@ -19,11 +19,15 @@ return new class extends Migration
             $table->string('password');
             $table->string('type')->default('User'); // 'User', 'Provider', 'Admin'
             $table->string('phone')->unique();
-            $table->string('address')->nullable();
+            // $table->string('address')->nullable();
             $table->string('police_certificate_path')->nullable();
             $table->string('selfie_path')->nullable();
             $table->string('national_id')->nullable();
             $table->string('gender')->nullable();
+            $table->string('lat')->nullable();
+            $table->string('lng')->nullable();
+            $table->string('address')->nullable();
+
             // $table->enum('gender', ['M', 'F']);
             $table->string('service')->nullable(); // For Providers
             $table->enum('status', ['pending', 'approved', 'rejected', 'suspended'])->default('pending')->nullable();

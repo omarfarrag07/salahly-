@@ -9,15 +9,25 @@ class ServiceController extends Controller
     public function index()
     {
         // Return all services 
-        return response()->json(Service::all());
+        $lang = request()->header('Accept-Language', 'en');
+        $services = Service::all()->map(function ($service) use ($lang) {
+            return [
+                'id' => $service->id,
+                'name' => $lang === 'ar' ? $service->name_ar : $service->name_en,
+                'description' => $lang === 'ar' ? $service->description_ar : $service->description_en,
+            ];
+        });
+        return response()->json($services);
     }
 
     public function store(Request $request)
     {
         // Validate and create a new service
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
+            'name_en' => 'required|string|max:255',
+            'name_ar' => 'required|string|max:255',
+            'description_en' => 'nullable|string',
+            'description_ar' => 'nullable|string',
             'category_id' => 'required|exists:categories,id',
         ]);
         $service = Service::create($validated);
@@ -26,18 +36,26 @@ class ServiceController extends Controller
 
     public function show($id)
     {
-        // Return a specific service 
-        $service = Service::findOrFail($id); 
-        return response()->json($service);
-    }
+        $lang = request()->header('Accept-Language', 'en');
+        $service = Service::findOrFail($id);
 
+        return response()->json([
+            'id' => $service->id,
+            'name' => $lang === 'ar' ? $service->name_ar : $service->name_en,
+            'description' => $lang === 'ar' ? $service->description_ar : $service->description_en,
+            'category_id' => $service->category_id,
+            // add other fields as needed
+        ]);
+    }
     public function update(Request $request, $id)
     {
         // Find and update a specific service
         $service = Service::findOrFail($id);
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
+            'name_en' => 'required|string|max:255',
+            'name_ar' => 'required|string|max:255',
+            'description_en' => 'nullable|string',
+            'description_ar' => 'nullable|string',
             'category_id' => 'required|exists:categories,id',
         ]);
         $service->update($validated);

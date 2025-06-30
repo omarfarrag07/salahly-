@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Service extends Model
 {
-    protected $fillable = ['name','category_id'];
+    protected $fillable = ['name_ar','name_en','category_id'];
     //
     public function category()
     {

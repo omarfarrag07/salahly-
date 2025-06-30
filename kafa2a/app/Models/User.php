@@ -29,6 +29,8 @@ class User extends Authenticatable
         'service',
         'national_id',
         'address',
+        'lat',
+        'lng',
         'gender',
         'police_certificate_path',
         'selfie_path',

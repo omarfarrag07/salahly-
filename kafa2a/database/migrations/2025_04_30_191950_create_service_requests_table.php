@@ -4,7 +4,8 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class extends Migration
+{
     /**
      * Run the migrations.
      */
@@ -14,11 +15,11 @@ return new class extends Migration {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->foreignId('service_id')->constrained()->onDelete('cascade'); // Add this if not present
-            $table->string('title_en')->nullable(); // Optional, if you want to keep it
-            $table->string('title_ar')->nullable(); // Optional, if you want to keep it
-            $table->text('description_en');
-            $table->text('description_ar')->nullable();
-            $table->string('location');
+            $table->string('title')->nullable(); // Optional, if you want to keep it
+            $table->text('description');
+            $table->string('lat')->nullable(); // Optional, if you want to keep it
+            $table->string('lng')->nullable(); // Optional, if you want to keep it
+             $table->string('address')->nullable(); // Optional, if you want to keep
             $table->decimal('price', 10, 2)->nullable(); // <-- Add this line
             $table->timestamp('scheduled_at')->nullable();
             $table->string('status')->default('pending');

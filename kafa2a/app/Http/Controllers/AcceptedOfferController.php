@@ -43,7 +43,7 @@ class AcceptedOfferController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-   
+
     /**
      * Store a newly created resource in storage.
      * (Usually not used directly; accepted offers are created when a user accepts an offer)

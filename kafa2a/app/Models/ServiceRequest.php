@@ -8,8 +8,10 @@ class ServiceRequest extends Model
 {
     protected $fillable = [
         'service_id',
-        'title',
-        'description',
+        'title_en',
+        'title_ar',
+        'description_en',
+        'description_ar',
         'location',
         'scheduled_at',
         'price',

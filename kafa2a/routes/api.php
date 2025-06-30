@@ -83,9 +83,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('offers/{id}/reject', [OfferController::class, 'reject']);
     Route::get('my-request-offers', [OfferController::class, 'offersForMyRequests']);
 
-  
+
     // Route::middleware('admin')->group(function () {
- 
+
 
 
     //     Route::get('/dashboard', [AdminController::class, 'dashboard']);
