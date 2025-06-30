@@ -29,4 +29,9 @@ class ServiceRequest extends Model
     public function service() {
         return $this->belongsTo(Service::class);
     }
+    public function payment()
+{
+    return $this->hasOne(Payment::class);
+}
+
 }
