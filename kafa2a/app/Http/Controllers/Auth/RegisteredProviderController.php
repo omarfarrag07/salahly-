@@ -31,8 +31,8 @@ class RegisteredProviderController extends Controller
         'address' => ['required', 'string', 'max:255'],
         'lat' => ['nullable', 'string', 'max:20'], // Optional
         'lng' => ['nullable', 'string', 'max:20'], // Optional
-        'police_certificate' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
-        'selfie' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:2048'],
+        'police_certificate' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:5120'],
+        'selfie' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:5120'],
         'phone' => ['required', 'string', 'max:20', 'unique:users,phone'],
         // 'gender' => ['required', 'in:M,F'],
     ]);

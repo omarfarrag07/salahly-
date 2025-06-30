@@ -150,9 +150,14 @@ Route::put('/Providers/{userId}/review', [AdminController::class, 'reviewProvide
 Route::get('/providers-count', [AdminController::class, 'countOfProviders']);
 Route::get('/Providers-pending', [AdminController::class, 'getPendingProviders']);
 Route::post('/providers', [AdminController::class, 'createProvider']);
+Route::get('/ApprovedSuspendedProviders', [AdminController::class, 'getApprovedSuspendedProviders']);
+
 
 // Dashboard
 Route::get('/dashboard', [AdminController::class, 'dashboard']);
+
+//admin profile
+Route::get('/profile', [AdminController::class, 'AdminProfile']);
 
 // Requests
 Route::get('/Requests', [AdminController::class, 'getAllServiceRequests']);
