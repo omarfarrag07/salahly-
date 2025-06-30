@@ -18,11 +18,15 @@ class AdminController extends Controller
     public function dashboard()
     {
         $usersCount = User::where('type','user')->count();
-        $providersCount = User::where('type', 'Provider')->where('status', 'approved')->count();
+        $ApprovedProvidersCount = User::where('type', 'Provider')->where('status', 'approved')->count();
+        $SuspendedProvidersCount = User::where('type', 'Provider')->where('status', 'suspended')->count();
+        $providersCount = $ApprovedProvidersCount + $SuspendedProvidersCount;
         $PendingProvidersCount = User::where('type', 'Provider')->where('status', 'pending')->count();     
 
         return response()->json([
             'users' => $usersCount,
+            'approvedProviders' => $ApprovedProvidersCount,
+            'suspendedProviders' => $SuspendedProvidersCount,
             'providers' => $providersCount,
             'PendingProviders'=>$PendingProvidersCount
         ]);
@@ -75,6 +79,28 @@ class AdminController extends Controller
         $providers = User::where('type', 'Provider')->where('status', 'pending')->latest()->get();
         return response()->json($providers);
     }
+
+        public function getApprovedSuspendedProviders()
+    {
+        $providers = User::where('type', 'Provider')
+            ->whereIn('status', ['approved', 'suspended'])
+            ->latest()
+            ->get();
+
+        return response()->json($providers);
+    }
+
+    public function AdminProfile()
+    {
+        $admin = auth()->user();
+    
+        return response()->json([
+            'name' => $admin->name,
+            'email' => $admin->email,
+            'phone' => $admin->phone,
+        ]);
+    }
+    
     
     public function createProvider(Request $request)
     {
@@ -117,10 +143,12 @@ class AdminController extends Controller
         $requests = ServiceRequest::with(['user', 'service'])->latest()->paginate(10);
         return response()->json($requests);
     }
-    public function getServiceRequestById($id){
-    $request = ServiceRequest::with(['user', 'service', 'offers'])->findOrFail($id);
-    return response()->json($request);
+    public function getServiceRequestById($id)
+    {
+        $request = ServiceRequest::with(['user', 'service', 'acceptedOffer.provider'])->findOrFail($id);
+        return response()->json($request);
     }
+    
     
     public function reviewProviderStatus(Request $request, $id)
     {
