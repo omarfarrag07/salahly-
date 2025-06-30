@@ -11,6 +11,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\ProviderController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ServiceController;
+use App\Http\Controllers\PaymentController;
 use App\Models\AcceptedOffer;
 
 
@@ -183,6 +184,19 @@ Route::prefix('services')->group(function () {
     Route::put('/{id}', [ServiceController::class, 'update']);
     Route::delete('/{id}', [ServiceController::class, 'destroy']);
 });
+
+//payment routes
+
+Route::prefix('payments')->group(function () {
+    Route::get('/', [PaymentController::class, 'index']);          // Get all payments (admin or history)
+    Route::get('/{id}', [PaymentController::class, 'show']);       // Get a specific payment by ID
+    Route::post('/', [PaymentController::class, 'store']);         // Create a new payment (dummy, cash, etc.)
+    Route::delete('/{id}', [PaymentController::class, 'destroy']); // Delete a payment by ID (admin only)
+
+    Route::get('/success', [PaymentController::class, 'success']); // Payment success callback (for gateways)
+    Route::get('/cancel', [PaymentController::class, 'cancel']);   // Payment cancel callback (for gateways)
+});
+
 
 
 
