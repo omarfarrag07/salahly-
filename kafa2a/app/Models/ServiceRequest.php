@@ -36,5 +36,14 @@ class ServiceRequest extends Model
     {
         return $this->hasOne(Payment::class);
     }
+    public function ratings()
+    {
+        return $this->hasMany(Rating::class);
+    }
+
+    public function acceptedOffer()
+    {
+        return $this->hasOne(AcceptedOffer::class);
+    }
 
 }
