@@ -10,7 +10,7 @@ class DummyPayment implements PaymentInterface
     public function pay(array $data)
     {
         return Payment::create([
-            'user_id' => auth()->id(),
+            'user_id' => $data['user_id'],
             'provider_id' => $data['provider_id'],
             'service_request_id' => $data['service_request_id'],
             'amount' => $data['amount'],

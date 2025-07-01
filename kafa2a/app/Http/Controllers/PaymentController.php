@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Payment;
 use App\Models\ServiceRequest;
-use App\Services\PaymentService;
+use App\Models\User;
 use App\Payment\DummyPayment;
 use App\Payment\CashPayment;
 use App\Payment\PayPalPayment;
@@ -24,40 +24,42 @@ class PaymentController extends Controller
     }
 
     //pay and update service request status
+   
     public function store(Request $request)
     {
         $request->validate([
             'amount' => 'required|numeric|min:1',
             'gateway' => 'required|string|in:dummy,paypal,stripe,cash',
             'provider_id' => 'required|exists:users,id',
+            'user_id' => 'required|exists:users,id',
             'service_request_id' => 'required|exists:service_requests,id',
         ]);
 
-        // Select strategy based on payment method
+        $serviceRequest = ServiceRequest::findOrFail($request->service_request_id);
+
+        if (Payment::where('service_request_id', $request->service_request_id)->exists()) {
+            return response()->json(['message' => 'Payment already made for this request'], 409);
+        }
+
         $strategy = match ($request->gateway) {
-            'paypal' => new PayPalPayment(),   // to be implemented
-            'stripe' => new StripePayment(),   // to be implemented
+            'paypal' => new PayPalPayment(),
+            'stripe' => new StripePayment(),
             'cash' => new CashPayment(),
             default => new DummyPayment(),
         };
 
-        // Process payment
-        $paymentService = new PaymentService($strategy);
-        $payment = $paymentService->pay([
+        $payment = $strategy->pay([
+            'user_id' => $request->user_id,
             'amount' => $request->amount,
             'provider_id' => $request->provider_id,
             'service_request_id' => $request->service_request_id,
         ]);
 
-        // Update related service request status to 'paid'
-        $serviceRequest = ServiceRequest::find($request->service_request_id);
-        if ($serviceRequest) {
-            $serviceRequest->status = 'paid';
-            $serviceRequest->save();
-        }
+        $serviceRequest->status = 'paid';
+        $serviceRequest->save();
 
         return response()->json([
-            'message' => 'Payment processed successfully and service marked as paid.',
+            'message' => 'Payment processed successfully.',
             'payment' => $payment,
         ], 201);
     }
