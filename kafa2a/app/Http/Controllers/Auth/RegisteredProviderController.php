@@ -44,7 +44,7 @@ class RegisteredProviderController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'service_id' => $request->service_id,
+            'service_id' => $request->service,
             'national_id' => $request->national_id,
             'address' => $request->address,
             'lat' => $request->lat ?? null, // Optional
