@@ -26,8 +26,8 @@ class ServiceController extends Controller
         $validated = $request->validate([
             'name_en' => 'required|string|max:255',
             'name_ar' => 'required|string|max:255',
-            'description_en' => 'nullable|string',
-            'description_ar' => 'nullable|string',
+            'description_en' => 'required|string',
+            'description_ar' => 'required|string',
             'category_id' => 'required|exists:categories,id',
         ]);
         $service = Service::create($validated);
@@ -54,8 +54,8 @@ class ServiceController extends Controller
         $validated = $request->validate([
             'name_en' => 'required|string|max:255',
             'name_ar' => 'required|string|max:255',
-            'description_en' => 'nullable|string',
-            'description_ar' => 'nullable|string',
+            'description_en' => 'required|string',
+            'description_ar' => 'required|string',
             'category_id' => 'required|exists:categories,id',
         ]);
         $service->update($validated);
