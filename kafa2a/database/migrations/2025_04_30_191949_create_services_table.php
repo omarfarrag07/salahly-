@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('name_en');
             $table->string('name_ar');
             $table->text('description_en')->nullable();
-            $table->text('description_ar');
+            $table->text('description_ar')->nullable();
             $table->foreignId('category_id')->constrained()->onDelete('cascade');
             // $table->foreignId('provider_id')->constrained('users')->onDelete('cascade');
             
