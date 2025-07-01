@@ -42,4 +42,30 @@ class RatingController extends Controller
 
         return response()->json($ratings);
     }
+    public function show($id)
+    {
+        $rating = Rating::findOrFail($id);
+        return response()->json($rating);
+    }
+
+    public function update(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'rating' => 'required|integer|min:1|max:5',
+            'comment' => 'nullable|string|max:500',
+        ]);
+
+        $rating = Rating::findOrFail($id);
+        $rating->update($validated);
+
+        return response()->json($rating);
+    }
+
+    public function destroy($id)
+    {
+        $rating = Rating::findOrFail($id);
+        $rating->delete();
+
+        return response()->json(['message' => 'Rating deleted successfully']);
+    }
 }
