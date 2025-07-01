@@ -74,33 +74,24 @@ class ProviderController extends Controller
             return response()->json(['error' => 'Unauthorized.'], 403);
         }
 
-        $serviceName = $provider->service; // service is just a string
+        $serviceId = $provider->service_id; // Use service_id directly
 
-        if (!$serviceName) {
+        if (!$serviceId) {
             return response()->json(['error' => 'No service linked.'], 404);
-        }
-
-        // Find the service by name
-        $service = \App\Models\Service::where('name', $serviceName)->first();
-
-        if (!$service) {
-            return response()->json(['error' => 'Service not found.'], 404);
         }
 
         // Find the service request by id and service_id
         $serviceRequest = \App\Models\ServiceRequest::with(['user', 'offers'])
-            ->where('service_id', $service->id)
+            ->where('service_id', $serviceId)
             ->findOrFail($id);
 
         return response()->json($serviceRequest);
     }
 
-
-
     public function sendOffer(Request $request, $id)
     {
         $provider = auth()->user();
-        $serviceName = $provider->service;
+        $serviceId = $provider->service_id;
 
         if (!$provider->isProvider()) {
             return response()->json(['error' => 'Unauthorized.'], 403);
@@ -111,24 +102,23 @@ class ProviderController extends Controller
             'message' => 'nullable|string|max:1000',
         ]);
 
-        if (!$serviceName) {
+        if (!$serviceId) {
             return response()->json(['error' => 'No service linked.'], 404);
         }
 
-        // Try to find the service request with the provider's service name
+        // Try to find the service request with the provider's service_id
         $serviceRequest = \App\Models\ServiceRequest::with('service')
-            ->whereHas('service', function ($query) use ($serviceName) {
-                $query->where('name', $serviceName);
-            })
+            ->where('service_id', $serviceId)
             ->find($id);
 
         // Fallback to "others" if not found
         if (!$serviceRequest) {
-            $serviceRequest = \App\Models\ServiceRequest::with('service')
-                ->whereHas('service', function ($query) {
-                    $query->where('name', 'others');
-                })
-                ->find($id);
+            $othersService = \App\Models\Service::where('name', 'others')->first();
+            if ($othersService) {
+                $serviceRequest = \App\Models\ServiceRequest::with('service')
+                    ->where('service_id', $othersService->id)
+                    ->find($id);
+            }
         }
 
         if (!$serviceRequest) {
@@ -154,6 +144,4 @@ class ProviderController extends Controller
             'offer' => $offer,
         ], 201);
     }
-
-
 }
