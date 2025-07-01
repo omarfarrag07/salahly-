@@ -21,53 +21,53 @@ class RegisteredProviderController extends Controller
      * @throws \Illuminate\Validation\ValidationException
      */
     public function store(Request $request): JsonResponse
-{
-    $request->validate([
-        'name' => ['required', 'string', 'max:255'],
-        'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:users,email'],
-        'password' => ['required', 'confirmed', Rules\Password::defaults()],
-        'service' => ['required', 'string', 'max:255'],
-        'national_id' => ['required', 'string', 'max:255'],
-        'address' => ['required', 'string', 'max:255'],
-        'lat' => ['nullable', 'string', 'max:20'], // Optional
-        'lng' => ['nullable', 'string', 'max:20'], // Optional
-        'police_certificate' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:5120'],
-        'selfie' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:5120'],
-        'phone' => ['required', 'string', 'max:20', 'unique:users,phone'],
-        // 'gender' => ['required', 'in:M,F'],
-    ]);
+    {
+        $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:users,email'],
+            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'service_id' => 'required|exists:services,id',
+            'national_id' => ['required', 'string', 'max:255'],
+            'address' => ['required', 'string', 'max:255'],
+            'lat' => ['nullable', 'string', 'max:20'], // Optional
+            'lng' => ['nullable', 'string', 'max:20'], // Optional
+            'police_certificate' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:5120'],
+            'selfie' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:5120'],
+            'phone' => ['required', 'string', 'max:20', 'unique:users,phone'],
+            // 'gender' => ['required', 'in:M,F'],
+        ]);
 
-    $policePath = $request->file('police_certificate')->store('certificates', 'public');
-    $selfiePath = $request->file('selfie')->store('selfies', 'public');
+        $policePath = $request->file('police_certificate')->store('certificates', 'public');
+        $selfiePath = $request->file('selfie')->store('selfies', 'public');
 
-    $provider = Provider::create([
-        'name' => $request->name,
-        'email' => $request->email,
-        'password' => Hash::make($request->password),
-        'service' => $request->service,
-        'national_id' => $request->national_id,
-        'address' => $request->address,
-        'lat' => $request->lat ?? null, // Optional
-        'lng' => $request->lng ?? null, // Optional
-        'phone' => $request->phone,
-        // 'gender' => $request->gender,
-        'police_certificate_path' => $policePath,
-        'selfie_path' => $selfiePath,
-    ]);
+        $provider = Provider::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+            'service_id' => $request->service_id,
+            'national_id' => $request->national_id,
+            'address' => $request->address,
+            'lat' => $request->lat ?? null, // Optional
+            'lng' => $request->lng ?? null, // Optional
+            'phone' => $request->phone,
+            // 'gender' => $request->gender,
+            'police_certificate_path' => $policePath,
+            'selfie_path' => $selfiePath,
+        ]);
 
-    event(new Registered($provider));
+        event(new Registered($provider));
 
-    // Automatically log in the provider
-    Auth::login($provider);
+        // Automatically log in the provider
+        Auth::login($provider);
 
-    // Return token for API usage
-    $token = $provider->createToken('api-token')->plainTextToken;
+        // Return token for API usage
+        $token = $provider->createToken('api-token')->plainTextToken;
 
-    return response()->json([
-        'user' => $provider,
-        'token' => $token,
-    ], 201);
-}
+        return response()->json([
+            'user' => $provider,
+            'token' => $token,
+        ], 201);
+    }
 }
 
 

@@ -26,7 +26,7 @@ class User extends Authenticatable
         'phone',
         'type',
         'status',
-        'service',
+        'service_id',
         'national_id',
         'address',
         'lat',

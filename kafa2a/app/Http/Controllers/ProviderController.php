@@ -43,26 +43,25 @@ class ProviderController extends Controller
             return response()->json(['error' => 'Unauthorized.'], 403);
         }
 
-        $serviceName = $provider->service; // service is just a string
+        $serviceId = $provider->service_id; // service_id should be in the users table
 
-        if (!$serviceName) {
+        if (!$serviceId) {
             return response()->json(['error' => 'No service linked.'], 404);
         }
 
-        // Try to fetch requests with the provider's service name
+        // Fetch requests with the provider's service_id
         $requests = \App\Models\ServiceRequest::with('user')
-            ->whereHas('service', function ($query) use ($serviceName) {
-                $query->where('name', $serviceName);
-            })
+            ->where('service_id', $serviceId)
             ->get();
 
-        // If none found, fallback to "others"
+        // If none found, fallback to "others" service (assuming you have a service named 'others')
         if ($requests->isEmpty()) {
-            $requests = \App\Models\ServiceRequest::with('user')
-                ->whereHas('service', function ($query) {
-                    $query->where('name', 'others');
-                })
-                ->get();
+            $othersService = \App\Models\Service::where('name', 'others')->first();
+            if ($othersService) {
+                $requests = \App\Models\ServiceRequest::with('user')
+                    ->where('service_id', $othersService->id)
+                    ->get();
+            }
         }
 
         return response()->json($requests);
