@@ -86,7 +86,7 @@ class OfferController extends Controller
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
-        $offer->update(['status' => 'rejected']);
+        $offer->serviceRequest->update(['status' => 'rejected']);
         return response()->json($offer);
     }
 
