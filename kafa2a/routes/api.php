@@ -196,6 +196,15 @@ Route::prefix('payments')->group(function () {
     Route::get('/success', [PaymentController::class, 'success']); // Payment success callback (for gateways)
     Route::get('/cancel', [PaymentController::class, 'cancel']);   // Payment cancel callback (for gateways)
 });
+Route::prefix('ratings')->group(function () {
+    Route::get('/', [RatingController::class, 'index']);          // List all ratings
+    Route::post('/', [RatingController::class, 'store']);         // Create a new rating
+    Route::get('/{id}', [RatingController::class, 'show']);       // Show a specific rating by ID
+    Route::put('/{id}', [RatingController::class, 'update']);     // Update a specific rating by ID
+    Route::delete('/{id}', [RatingController::class, 'destroy']); // Delete a specific rating by ID
+}
+);
+
 
 
 
