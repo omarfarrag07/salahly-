@@ -85,4 +85,10 @@ class CategoryController extends Controller
         $category->delete();
         return response()->json(['message' => 'Category deleted']);
     }
+    public function getAllCategories()
+    {
+        $categories =Category::latest()->get();
+        return response()->json($categories);
+    }
+
 }
