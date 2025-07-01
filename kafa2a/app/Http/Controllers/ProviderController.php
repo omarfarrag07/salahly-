@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Notifications\NewOfferNotification;
+use App\Events\MyEvent; // Add this at the top
 
 class ProviderController extends Controller
 {
@@ -138,6 +140,14 @@ class ProviderController extends Controller
             'price' => $request->price,
             'message' => $request->message,
         ]);
+
+        // Broadcast the event via Pusher
+        $user_id= $serviceRequest->user->id; 
+        event(new MyEvent('Offer Sent Successfully!', $user_id));
+
+        // Optionally notify the user as before
+        // $user = User::find($request->user_id);
+        // $user->notify(new NewOfferNotification($offer));
 
         return response()->json([
             'message' => 'Offer Sent Successfully!',

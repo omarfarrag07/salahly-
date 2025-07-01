@@ -10,30 +10,33 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 
 class MyEvent implements ShouldBroadcast
 {
-  use Dispatchable, InteractsWithSockets, SerializesModels;
+    use Dispatchable, InteractsWithSockets, SerializesModels;
 
-  public $message;
+    public $message;
+    public $user_id;
 
-  public function __construct($message)
-  {
-      $this->message = $message;
-  }
+    public function __construct($message, $user_id)
+    {
+        $this->message = $message;
+        $this->user_id = $user_id;
+    }
 
-  public function broadcastOn()
-  {
-      return ['my-channel'];
-  }
+    public function broadcastOn()
+    {
+        // return ['my-channel'];
+        return ['private-user.' . $this->user_id];
+    }
 
-  public function broadcastWith()
-{
-    return [
-        'message' => $this->message,
-        'time' => now()->toDateTimeString()
-    ];
-}
+    public function broadcastWith()
+    {
+        return [
+            'message' => $this->message,
+            'time' => now()->toDateTimeString()
+        ];
+    }
 
-  public function broadcastAs()
-  {
-      return 'my-event';
-  }
+    public function broadcastAs()
+    {
+        return 'my-event';
+    }
 }
