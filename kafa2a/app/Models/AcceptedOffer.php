@@ -26,11 +26,11 @@ class AcceptedOffer extends Model
 
     public function user()
     {
-        return $this->serviceRequest; // via serviceRequest
+        return this->belongsTo(User::class, 'user_id'); // who accepted the offer
     }
     public function provider()
     {
-        return $this->offer->provider(); // via offer
+        return $this->belongsTo(User::class, 'provider_id'); // who provided the service
     }
 
     public function payment()
