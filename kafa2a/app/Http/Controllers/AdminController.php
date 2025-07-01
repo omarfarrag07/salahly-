@@ -145,7 +145,7 @@ class AdminController extends Controller
     }
     public function getServiceRequestById($id)
     {
-        $request = ServiceRequest::with(['user', 'service', 'acceptedOffer.provider'])->findOrFail($id);
+        $request = ServiceRequest::with(['user', 'service', 'acceptedOffer.offer.provider'])->findOrFail($id);
         return response()->json($request);
     }
     
