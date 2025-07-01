@@ -134,7 +134,7 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
   // Categories
-  Route::apiResource('categories', CategoryController::class)->only(['index', 'show']);
+Route::apiResource('categories', CategoryController::class)->only(['index', 'show']);
 
 //admin routes
 //tested

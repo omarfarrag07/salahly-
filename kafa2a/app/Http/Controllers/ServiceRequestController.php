@@ -37,7 +37,9 @@ class ServiceRequestController extends Controller
         $validated = $request->validate([
             'service_id' => 'required|exists:services,id',
             'description' => 'required|string|max:500',
-            'location' => 'required|json',
+            'address' => 'nullable|string|max:255',
+            'lat' => 'nullable|string|max:20',
+            'lng' => 'nullable|string|max:20',
             'title' => 'required|string|max:255',
             'scheduled_at' => 'nullable|date|after:now',
             'price' => 'required|numeric|min:0',
