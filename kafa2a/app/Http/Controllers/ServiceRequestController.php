@@ -54,10 +54,17 @@ class ServiceRequestController extends Controller
     }
 
     public function show($id)
-    {
-        $request = ServiceRequest::with(['user', 'service', 'offers'])->findOrFail($id);
-        return response()->json($request);
-    }
+{
+    $request =ServiceRequest::with([
+        'user',
+        'service',
+        'offers' => function ($query) {
+            $query->where('status', 'pending');
+        }
+    ])->findOrFail($id);
+
+    return response()->json($request);
+}
 
     public function update(Request $request, $id)
     {
