@@ -32,6 +32,9 @@ return new class extends Migration
             $table->string('service_id')->nullable(); // For Providers
             $table->enum('status', ['pending', 'approved', 'rejected', 'suspended'])->default('pending')->nullable();
             $table->text('suspend_reason')->nullable();
+            //
+            $table->TinyInteger('rating')->default(5);
+            $table->text('review')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });
