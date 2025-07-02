@@ -6,6 +6,8 @@ use Laravel\Sanctum\HasApiTokens; // <-- Add this line
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use App\Models\Rating;
+
 
 class User extends Authenticatable
 {
@@ -109,5 +111,9 @@ class User extends Authenticatable
     {
         return $this->hasOne(Service::class, 'provider_id', 'id');
     }
+    public function receivedRatings()
+{
+    return $this->hasMany(\App\Models\Rating::class, 'provider_id');
+}
 
 }
