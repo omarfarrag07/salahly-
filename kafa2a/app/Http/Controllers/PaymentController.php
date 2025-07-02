@@ -6,7 +6,6 @@ use Illuminate\Http\Request;
 use App\Models\Payment;
 use App\Models\ServiceRequest;
 use App\Models\User;
-use App\Payment\DummyPayment;
 use App\Payment\CashPayment;
 use App\Payment\PayPalPayment;
 use App\Payment\StripePayment;
@@ -29,7 +28,7 @@ class PaymentController extends Controller
     {
         $request->validate([
             'amount' => 'required|numeric|min:1',
-            'gateway' => 'required|string|in:dummy,paypal,stripe,cash',
+            'gateway' => 'required|string|in:paypal,stripe,cash',
             'provider_id' => 'required|exists:users,id',
             'user_id' => 'required|exists:users,id',
             'service_request_id' => 'required|exists:service_requests,id',
@@ -44,8 +43,7 @@ class PaymentController extends Controller
         $strategy = match ($request->gateway) {
             'paypal' => new PayPalPayment(),
             'stripe' => new StripePayment(),
-            'cash' => new CashPayment(),
-            default => new DummyPayment(),
+            default => new CashPayment(),
         };
 
         $payment = $strategy->pay([
