@@ -48,48 +48,68 @@ class OfferController extends Controller
     public function accept($id)
     {
         $offer = Offer::findOrFail($id);
-
+    
         if ($offer->serviceRequest->user_id !== auth()->id()) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
+        if ($offer->serviceRequest->status !== 'pending') {
+            return response()->json(['message' => 'Only pending service requests can be accepted'], 400);
+        }
 
+    
         if (AcceptedOffer::where('service_request_id', $offer->service_request_id)->exists()) {
             return response()->json(['message' => 'Request already accepted'], 400);
         }
-
+    
+        if ($offer->status !== 'pending') {
+            return response()->json(['message' => 'Only pending offers can be accepted'], 400);
+        }
+    
         $offer->serviceRequest->update(['status' => 'accepted']);
-
+        $offer->update(['status' => 'accepted']);
+    
         $acceptedOffer = AcceptedOffer::create([
             'offer_id' => $offer->id,
-            'service_request_id' => $offer->service_request_id
+            'service_request_id' => $offer->service_request_id,
+            'provider_id' => $offer->provider_id  
         ]);
-
-        // event(new ChatStarted([
-        //     'chat_id' => $acceptedOffer->id,
-        //     'user_id' => $offer->serviceRequest->user_id,
-        //     'provider_id' => $offer->provider_id,
-        //     'service_request_id' => $offer->service_request_id
-        // ]));
-
-        return response()->json([
-            'message' => 'Offer accepted and chat started.',
-            'accepted_offer' => $acceptedOffer
-        ], 201);
-    }
-
-
-    public function reject($id)
-    {
-        $offer = Offer::findOrFail($id);
-
-        if ($offer->serviceRequest->user_id !== auth()->id()) {
-            return response()->json(['message' => 'Unauthorized'], 403);
+    
+      // event(new ChatStarted([
+            //     'chat_id' => $acceptedOffer->id,
+            //     'user_id' => $offer->serviceRequest->user_id,
+            //     'provider_id' => $offer->provider_id,
+            //     'service_request_id' => $offer->service_request_id
+            // ]));
+            
+            return response()->json([
+                'message' => 'Offer accepted and chat started.',
+                'accepted_offer' => $acceptedOffer
+            ], 201);
         }
 
-        $offer->serviceRequest->update(['status' => 'rejected']);
-        return response()->json($offer);
-    }
-
+        public function reject($id)
+        {
+            $offer = Offer::findOrFail($id);
+        
+            if ($offer->serviceRequest->user_id !== auth()->id()) {
+                return response()->json(['message' => 'Unauthorized'], 403);
+            }
+        
+             if ($offer->serviceRequest->status !== 'pending') {
+                return response()->json(['message' => 'Only pending service requests can be rejected'], 400);
+            }
+            if ($offer->status !== 'pending') {
+                return response()->json(['message' => 'Only pending offers can be rejected'], 400);
+            }
+        
+            $offer->update(['status' => 'rejected']);
+        
+            return response()->json([
+                'message' => 'Offer rejected successfully.',
+                'offer' => $offer
+            ]);
+        }
+        
     public function offersForMyRequests(Request $request)
     {
         // Get all service requests for the authenticated user (customer)
