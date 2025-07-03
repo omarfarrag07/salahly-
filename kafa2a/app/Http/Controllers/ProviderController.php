@@ -54,9 +54,9 @@ class ProviderController extends Controller
             return response()->json(['error' => 'No service linked.'], 404);
         }
     
-        // Get requests matching the provider's service
         $requests = \App\Models\ServiceRequest::with([
             'user',
+            'service',
             'offers' => function ($query) use ($provider) {
                 $query->where('provider_id', $provider->id);
             }
@@ -64,12 +64,13 @@ class ProviderController extends Controller
         ->where('service_id', $serviceId)
         ->get();
     
-        // If none found, fallback to "others" service
+        // Fallback to "others" service if no requests found
         if ($requests->isEmpty()) {
             $othersService = \App\Models\Service::where('name', 'others')->first();
             if ($othersService) {
                 $requests = \App\Models\ServiceRequest::with([
                     'user',
+                    'service',
                     'offers' => function ($query) use ($provider) {
                         $query->where('provider_id', $provider->id);
                     }
@@ -79,16 +80,16 @@ class ProviderController extends Controller
             }
         }
     
-        // Add custom flag to each request
-        $requests->transform(function ($request) use ($provider) {
+        $requests->transform(function ($request) {
             $request->has_offered = $request->offers->isNotEmpty();
-            unset($request->offers); // Optional: remove offers from response
+            unset($request->offers); 
             return $request;
         });
     
         return response()->json($requests);
     }
     
+
     public function getRequestByID($id)
     {
         $provider = auth()->user();
