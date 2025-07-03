@@ -12,6 +12,11 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Password;
+
+
+use Illuminate\Support\Facades\Storage;
 
 class RegisteredProviderController extends Controller
 {
@@ -27,7 +32,7 @@ class RegisteredProviderController extends Controller
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
             'service_id' => 'required|exists:services,id',
-            'national_id' => ['required', 'string', 'max:255'],
+            'national_id' => 'required|string|max:20|unique:users,national_id',
             'address' => ['required', 'string', 'max:255'],
             'lat' => ['nullable', 'numeric', 'between:-90,90'],
             'lng' => ['nullable', 'numeric', 'between:-180,180'],
@@ -68,6 +73,8 @@ class RegisteredProviderController extends Controller
             'token' => $token,
         ], 201);
     }
+
+    
 }
 
 

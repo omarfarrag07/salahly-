@@ -37,6 +37,10 @@ Route::post('/register', [RegisteredUserController::class, 'store'])
 Route::post('/register-provider', [RegisteredProviderController::class, 'store'])
     ->middleware('guest')->name('register-provider');
 
+    
+ Route::middleware(['auth:sanctum'])->put('/provider/update', [RegisteredProviderController::class, 'update']);
+
+
 // Route::post('/login', [AuthenticatedSessionController::class, 'store'])
 //     ->middleware('guest')->name('login');
 
