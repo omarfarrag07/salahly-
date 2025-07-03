@@ -25,12 +25,15 @@ class ServiceRequestController extends Controller
     public function showAllRequests()
     {
         $requests = ServiceRequest::with(['service', 'user'])
-            ->where('user_id', auth()->id()) // Only the authenticated user's requests
+            ->where('user_id', auth()->id())
+            ->when(request('status'), fn($q, $status) => $q->where('status', $status))
             ->latest()
             ->paginate(10);
 
         return response()->json($requests);
     }
+
+
 
     public function store(Request $request)
     {
@@ -38,8 +41,8 @@ class ServiceRequestController extends Controller
             'service_id' => 'required|exists:services,id',
             'description' => 'required|string|max:500',
             'address' => 'nullable|string|max:255',
-            'lat' => 'nullable|string|max:20',
-            'lng' => 'nullable|string|max:20',
+            'lat' => ['nullable', 'numeric', 'between:-90,90'],
+            'lng' => ['nullable', 'numeric', 'between:-180,180'],
             'title' => 'required|string|max:255',
             'scheduled_at' => 'nullable|date|after:now',
             'price' => 'required|numeric|min:0',
@@ -54,17 +57,17 @@ class ServiceRequestController extends Controller
     }
 
     public function show($id)
-{
-    $request =ServiceRequest::with([
-        'user',
-        'service',
-        'offers' => function ($query) {
-            $query->where('status', 'pending');
-        }
-    ])->findOrFail($id);
+    {
+        $request = ServiceRequest::with([
+            'user',
+            'service',
+            'offers' => function ($query) {
+                $query->where('status', 'pending');
+            }
+        ])->findOrFail($id);
 
-    return response()->json($request);
-}
+        return response()->json($request);
+    }
 
     public function update(Request $request, $id)
     {
@@ -106,32 +109,38 @@ class ServiceRequestController extends Controller
         return response()->json(['message' => 'Request deleted successfully']);
     }
 
-    public function accept(ServiceRequest $request)
+    // public function accept(ServiceRequest $request)
+    // {
+    //     $request->update(['status' => 'accepted']);
+    //     AcceptedOffer::create([
+    //         'service_request_id' => $request->id,
+    //         'provider_id' => auth()->id(),
+    //     ]);
+    //     //ToDo: Notify the user about the acceptance
+    //     // event(new RequestAccepted($request)); // you can define this event similarly
+
+    //     // return response()->json(['message' => 'Request accepted']);
+
+    //     return response()->json($request);
+    // }
+
+    public function cancel($id)
     {
-        $request->update(['status' => 'accepted']);
-        AcceptedOffer::create([
-            'service_request_id' => $request->id,
-            'provider_id' => auth()->id(),
-        ]);
-        //ToDo: Notify the user about the acceptance
-        // event(new RequestAccepted($request)); // you can define this event similarly
-
-        // return response()->json(['message' => 'Request accepted']);
-
-        return response()->json($request);
-    }
-
-    public function cancel(ServiceRequest $request)
-    {
+        $request = ServiceRequest::findOrFail($id);
         abort_if($request->user_id !== auth()->id(), 403);
         abort_if($request->status !== 'pending', 400, 'Only pending requests can be canceled');
         $request->update(['status' => 'canceled']);
         return response()->json($request);
     }
 
-    public function complete(ServiceRequest $request)
+    public function complete($id)
     {
+        $request = ServiceRequest::findOrFail($id);
         $request->update(['status' => 'completed']);
+
+        // Delete the related accepted offer(s)
+        AcceptedOffer::where('service_request_id', $request->id)->delete();
+
         return response()->json($request);
     }
 }

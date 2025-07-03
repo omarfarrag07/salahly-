@@ -51,6 +51,10 @@ class ProviderController extends Controller
             return response()->json(['error' => 'No service linked.'], 404);
         }
 
+        if($provider->status !== 'approved') {
+            return response()->json(['error' => 'Provider is inactive.'], 403);
+        }
+
         // Fetch requests with the provider's service_id
         $requests = \App\Models\ServiceRequest::with('user')
             ->where('service_id', $serviceId)

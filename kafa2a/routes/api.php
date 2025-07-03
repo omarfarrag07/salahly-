@@ -74,9 +74,9 @@ Route::middleware('auth:sanctum')->group(function () {
     // Service Requests
     Route::apiResource('service-requests', ServiceRequestController::class);
     Route::get('all-my-service-requests', [ServiceRequestController::class, 'showAllRequests']);
-    Route::post('service-requests/{request}/accept', [ServiceRequestController::class, 'accept']);
-    Route::post('service-requests/{request}/cancel', [ServiceRequestController::class, 'cancel']);
-    Route::post('service-requests/{request}/complete', [ServiceRequestController::class, 'complete']);
+    // Route::post('service-requests/{request}/accept', [ServiceRequestController::class, 'accept']);
+    Route::post('service-requests/{id}/cancel', [ServiceRequestController::class, 'cancel']);
+    Route::post('service-requests/{id}/complete', [ServiceRequestController::class, 'complete']);
 
     // Offers
     Route::apiResource('offers', OfferController::class)->only(['index', 'store', 'show']);
@@ -94,7 +94,7 @@ Route::middleware('auth:sanctum')->group(function () {
     //     Route::get('/providers', [AdminController::class, 'allProviders']);
     //     Route::get('/requests', [AdminController::class, 'allRequests']);
     //     Route::delete('/users/{id}', [AdminController::class, 'deleteUser']);
-        
+
     //     Route::post('/provider/{userId}/review', [AdminController::class, 'reviewProviderStatus']);
     // });
 
@@ -112,12 +112,12 @@ Route::middleware('auth:sanctum')->group(function () {
     // });
 
 
-         // Provider specific routes
-        Route::apiResource('provider', ProviderController::class);
-        Route::get('/requests', [ProviderController::class, 'getAllRequests']);         // Get all service requests
-        Route::get('/requests/{id}', [ProviderController::class, 'getRequestByID']);   // view request by id
-        Route::post('/request/{id}/offer', [ProviderController::class, 'sendOffer']); // send an offer
-    
+    // Provider specific routes
+    Route::apiResource('provider', ProviderController::class);
+    Route::get('/requests', [ProviderController::class, 'getAllRequests']);         // Get all service requests
+    Route::get('/requests/{id}', [ProviderController::class, 'getRequestByID']);   // view request by id
+    Route::post('/request/{id}/offer', [ProviderController::class, 'sendOffer']); // send an offer
+
     // Accepted Offers
     Route::apiResource('accepted-offers', \App\Http\Controllers\AcceptedOfferController::class)
         ->only(['index', 'show', 'store', 'update', 'destroy']);
@@ -132,15 +132,24 @@ Route::middleware('auth:sanctum')->group(function () {
     // // Example for future: Services
     // Route::apiResource('services', ServiceController::class);
     Route::prefix('ratings')->group(function () {
-            Route::post('/', [RatingController::class, 'store']); 
+        Route::post('/', [RatingController::class, 'store']);
 
-       
+
+    });
+
+    // 1. Get a list of nearby providers by coordinates (POST recommended for body params)
+    Route::post('/nearby-providers', [\App\Http\Controllers\LocationController::class, 'getNearbyProviders']);
+
+    // 2. Get the nearest provider for a specific service request (by id)
+    Route::get('/service-requests/{id}/nearest-provider', [\App\Http\Controllers\LocationController::class, 'nearestProvider']);
+
+    // 3. Get a list of nearest providers for a specific service request (by id)
+    Route::get('/service-requests/{id}/nearest-providers', [\App\Http\Controllers\LocationController::class, 'nearestProvidersToServiceRequest']);
 });
-});
 
 
 
-  // Categories
+// Categories
 Route::apiResource('categories', CategoryController::class)->only(['index', 'show']);
 Route::get('/Categories', [CategoryController::class, 'getAllCategories']);
 
@@ -206,12 +215,13 @@ Route::prefix('payments')->group(function () {
     Route::get('/cancel', [PaymentController::class, 'cancel']);   // Payment cancel callback (for gateways)
 });
 
-Route::prefix('ratings')->group(function () {
-  
-    Route::get('/{id}/rating-reviews', [RatingController::class, 'getProviderRatingAndReviews']);
-    
-     }
-    );
+Route::prefix('ratings')->group(
+    function () {
+
+        Route::get('/{id}/rating-reviews', [RatingController::class, 'getProviderRatingAndReviews']);
+
+    }
+);
 // Route::prefix('ratings')->group(function () {
 //     Route::get('/', [RatingController::class, 'index']);          // List all ratings
 //     Route::post('/', [RatingController::class, 'store']);         // Create a new rating

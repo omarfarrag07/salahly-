@@ -29,8 +29,8 @@ class RegisteredProviderController extends Controller
             'service_id' => 'required|exists:services,id',
             'national_id' => ['required', 'string', 'max:255'],
             'address' => ['required', 'string', 'max:255'],
-            'lat' => ['nullable', 'string', 'max:20'], // Optional
-            'lng' => ['nullable', 'string', 'max:20'], // Optional
+            'lat' => ['nullable', 'numeric', 'between:-90,90'],
+            'lng' => ['nullable', 'numeric', 'between:-180,180'],
             'police_certificate' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:5120'],
             'selfie' => ['required', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:5120'],
             'phone' => ['required', 'string', 'max:20', 'unique:users,phone'],
