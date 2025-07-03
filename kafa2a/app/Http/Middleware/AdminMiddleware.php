@@ -16,7 +16,6 @@ class AdminMiddleware
         if (auth()->check() && auth()->user()->type === 'admin') {
             return $next($request);
         }
-
         return response()->json(['error' => 'Unauthorized. Admins only.'], 403);
     }
 }
