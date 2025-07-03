@@ -119,6 +119,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
 
     // Provider specific routes
+    Route::put('/provider/profile', [ProviderController::class, 'updateSelf']);
+
     Route::apiResource('provider', ProviderController::class);
     Route::get('/requests', [ProviderController::class, 'getAllRequests']);         // Get all service requests
     Route::get('/requests/{id}', [ProviderController::class, 'getRequestByID']);   // view request by id
@@ -194,7 +196,7 @@ Route::middleware(['auth:sanctum', AdminMiddleware::class])->group(function () {
 
     // Category Routes
     Route::prefix('categories')->group(function () {
-        Route::get('/', [CategoryController::class, 'index']);
+        // Route::get('/', [CategoryController::class, 'index']);
         Route::get('/{id}', [CategoryController::class, 'show']);
         Route::post('/', [CategoryController::class, 'store']);
         Route::put('/{id}', [CategoryController::class, 'update']);

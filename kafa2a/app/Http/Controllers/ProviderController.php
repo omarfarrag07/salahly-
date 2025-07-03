@@ -25,7 +25,19 @@ class ProviderController extends Controller
     public function update(Request $request, $id)
     {
         $provider = User::where('type', 'Provider')->findOrFail($id);
-        $provider->update($request->only('name', 'email', 'phone'));
+
+        $data = $request->except(['email', 'password', 'name', 'phone']);
+
+        // Handle file uploads if present
+        if ($request->hasFile('police_certificate')) {
+            $data['police_certificate_path'] = $request->file('police_certificate')->store('certificates', 'public');
+        }
+        if ($request->hasFile('selfie')) {
+            $data['selfie_path'] = $request->file('selfie')->store('selfies', 'public');
+        }
+
+        $provider->update($data);
+
         return response()->json($provider);
     }
 
@@ -175,5 +187,30 @@ class ProviderController extends Controller
             'message' => 'Offer Sent Successfully!',
             'offer' => $offer,
         ], 201);
+    }
+
+    public function updateSelf(Request $request)
+    {
+        $provider = auth()->user();
+
+        if (!$provider || $provider->type !== 'Provider') {
+            return response()->json(['error' => 'Unauthorized.'], 403);
+        }
+
+        // For form-data, use all() and unset forbidden fields
+        $data = $request->all();
+        unset($data['email'], $data['password'], $data['name'], $data['phone']);
+
+        // Handle file uploads if present
+        if ($request->hasFile('police_certificate')) {
+            $data['police_certificate_path'] = $request->file('police_certificate')->store('certificates', 'public');
+        }
+        if ($request->hasFile('selfie')) {
+            $data['selfie_path'] = $request->file('selfie')->store('selfies', 'public');
+        }
+
+        $provider->update($data);
+
+        return response()->json($provider);
     }
 }
