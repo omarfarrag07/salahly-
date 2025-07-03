@@ -119,7 +119,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
 
     // Provider specific routes
-    Route::put('/provider/profile', [ProviderController::class, 'updateSelf']);
+    Route::post('/provider/profile', [ProviderController::class, 'updateSelf']);
 
     Route::apiResource('provider', ProviderController::class);
     Route::get('/requests', [ProviderController::class, 'getAllRequests']);         // Get all service requests

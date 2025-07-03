@@ -51,21 +51,21 @@ class ProviderController extends Controller
     public function getAllRequests()
     {
         $provider = auth()->user();
-    
+
         if (!$provider->isProvider()) {
             return response()->json(['error' => 'Unauthorized.'], 403);
         }
-    
+
         if ($provider->status !== 'approved') {
             return response()->json(['error' => 'Provider is inactive.'], 403);
         }
-    
+
         $serviceId = $provider->service_id;
-    
+
         if (!$serviceId) {
             return response()->json(['error' => 'No service linked.'], 404);
         }
-    
+
         $requests = \App\Models\ServiceRequest::with([
             'user',
             'service',
@@ -73,9 +73,9 @@ class ProviderController extends Controller
                 $query->where('provider_id', $provider->id);
             }
         ])
-        ->where('service_id', $serviceId)
-        ->get();
-    
+            ->where('service_id', $serviceId)
+            ->get();
+
         // Fallback to "others" service if no requests found
         if ($requests->isEmpty()) {
             $othersService = \App\Models\Service::where('name', 'others')->first();
@@ -87,20 +87,20 @@ class ProviderController extends Controller
                         $query->where('provider_id', $provider->id);
                     }
                 ])
-                ->where('service_id', $othersService->id)
-                ->get();
+                    ->where('service_id', $othersService->id)
+                    ->get();
             }
         }
-    
+
         $requests->transform(function ($request) {
             $request->has_offered = $request->offers->isNotEmpty();
-            unset($request->offers); 
+            unset($request->offers);
             return $request;
         });
-    
+
         return response()->json($requests);
     }
-    
+
 
     public function getRequestByID($id)
     {
@@ -176,7 +176,7 @@ class ProviderController extends Controller
         ]);
 
         // Broadcast the event via Pusher
-        $user_id= $serviceRequest->user->id; 
+        $user_id = $serviceRequest->user->id;
         event(new MyEvent('Offer Sent Successfully!', $user_id));
 
         // Optionally notify the user as before
@@ -197,9 +197,16 @@ class ProviderController extends Controller
             return response()->json(['error' => 'Unauthorized.'], 403);
         }
 
-        // For form-data, use all() and unset forbidden fields
-        $data = $request->all();
-        unset($data['email'], $data['password'], $data['name'], $data['phone']);
+        $data = [];
+
+        // Define allowed fields to update
+        $allowedFields = ['address', 'lat', 'lng', 'service_id', 'national_id'];
+
+        foreach ($allowedFields as $field) {
+            if ($request->has($field)) { // Use has() instead of filled()
+                $data[$field] = $request->$field;
+            }
+        }
 
         // Handle file uploads if present
         if ($request->hasFile('police_certificate')) {
@@ -209,8 +216,13 @@ class ProviderController extends Controller
             $data['selfie_path'] = $request->file('selfie')->store('selfies', 'public');
         }
 
+        if (empty($data)) {
+            return response()->json(['message' => 'No valid fields to update.'], 400);
+        }
+
         $provider->update($data);
 
         return response()->json($provider);
     }
+
 }
