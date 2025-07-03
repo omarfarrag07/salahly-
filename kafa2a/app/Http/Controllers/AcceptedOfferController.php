@@ -12,7 +12,23 @@ class AcceptedOfferController extends Controller
      */
     public function index()
     {
-        $acceptedOffers = AcceptedOffer::with(['offer.provider', 'request.user'])->paginate(10);
+        $userId = auth()->id();
+        $acceptedOffers = AcceptedOffer::with(['offer.provider', 'request.user'])
+            ->whereHas('request', function ($query) use ($userId) {
+                $query->where('user_id', $userId);
+            })
+            ->paginate(10);
+
+        return response()->json($acceptedOffers);
+    }
+
+    public function indexForProvider()
+    {
+        $userId = auth()->id();
+        $acceptedOffers = AcceptedOffer::with(['offer.provider', 'request.user'])
+            ->where('provider_id', $userId)
+            ->paginate(10);
+
         return response()->json($acceptedOffers);
     }
 

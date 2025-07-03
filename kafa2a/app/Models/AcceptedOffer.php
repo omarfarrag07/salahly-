@@ -26,7 +26,7 @@ class AcceptedOffer extends Model
 
     public function user()
     {
-        return this->belongsTo(User::class, 'user_id'); // who accepted the offer
+        return $this->belongsTo(User::class, 'user_id'); // who accepted the offer
     }
     public function provider()
     {

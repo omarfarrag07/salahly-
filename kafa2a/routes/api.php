@@ -121,6 +121,7 @@ Route::middleware('auth:sanctum')->group(function () {
     // Accepted Offers
     Route::apiResource('accepted-offers', \App\Http\Controllers\AcceptedOfferController::class)
         ->only(['index', 'show', 'store', 'update', 'destroy']);
+    Route::get('accepted-offers-providers', [\App\Http\Controllers\AcceptedOfferController::class, 'indexForProvider']);
     Route::get('service-requests/{requestId}/accepted-offer', [\App\Http\Controllers\AcceptedOfferController::class, 'showByRequest']);
     Route::get('users/{userId}/accepted-offers', [\App\Http\Controllers\AcceptedOfferController::class, 'acceptedOfferforUser']);
 
