@@ -62,7 +62,7 @@ class ServiceRequestController extends Controller
             'user',
             'service',
             'offers' => function ($query) {
-                $query->where('status', 'pending');
+                $query->where('status', 'pending')->with(['provider', 'serviceRequest']);
             }
         ])->findOrFail($id);
 

@@ -36,42 +36,59 @@ class ProviderController extends Controller
         return response()->json(['message' => 'Provider deleted']);
     }
 
-
     public function getAllRequests()
     {
         $provider = auth()->user();
-
+    
         if (!$provider->isProvider()) {
             return response()->json(['error' => 'Unauthorized.'], 403);
         }
-
-        $serviceId = $provider->service_id; // service_id should be in the users table
-
+    
+        if ($provider->status !== 'approved') {
+            return response()->json(['error' => 'Provider is inactive.'], 403);
+        }
+    
+        $serviceId = $provider->service_id;
+    
         if (!$serviceId) {
             return response()->json(['error' => 'No service linked.'], 404);
         }
-
-        if($provider->status !== 'approved') {
-            return response()->json(['error' => 'Provider is inactive.'], 403);
-        }
-
-        // Fetch requests with the provider's service_id
-        $requests = \App\Models\ServiceRequest::with('user')
-            ->where('service_id', $serviceId)
-            ->get();
-
-        // If none found, fallback to "others" service (assuming you have a service named 'others')
+    
+        // Get requests matching the provider's service
+        $requests = \App\Models\ServiceRequest::with([
+            'user',
+            'offers' => function ($query) use ($provider) {
+                $query->where('provider_id', $provider->id);
+            }
+        ])
+        ->where('service_id', $serviceId)
+        ->get();
+    
+        // If none found, fallback to "others" service
         if ($requests->isEmpty()) {
             $othersService = \App\Models\Service::where('name', 'others')->first();
             if ($othersService) {
-                $requests = \App\Models\ServiceRequest::with('user')
-                    ->where('service_id', $othersService->id)
-                    ->get();
+                $requests = \App\Models\ServiceRequest::with([
+                    'user',
+                    'offers' => function ($query) use ($provider) {
+                        $query->where('provider_id', $provider->id);
+                    }
+                ])
+                ->where('service_id', $othersService->id)
+                ->get();
             }
         }
-
+    
+        // Add custom flag to each request
+        $requests->transform(function ($request) use ($provider) {
+            $request->has_offered = $request->offers->isNotEmpty();
+            unset($request->offers); // Optional: remove offers from response
+            return $request;
+        });
+    
         return response()->json($requests);
     }
+    
     public function getRequestByID($id)
     {
         $provider = auth()->user();
