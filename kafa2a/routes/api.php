@@ -1,4 +1,6 @@
 <?php
+use App\Http\Middleware\AdminMiddleware;
+
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -37,8 +39,8 @@ Route::post('/register', [RegisteredUserController::class, 'store'])
 Route::post('/register-provider', [RegisteredProviderController::class, 'store'])
     ->middleware('guest')->name('register-provider');
 
-    
- Route::middleware(['auth:sanctum'])->put('/provider/update', [RegisteredProviderController::class, 'update']);
+
+Route::middleware(['auth:sanctum'])->put('/provider/update', [RegisteredProviderController::class, 'update']);
 
 
 // Route::post('/login', [AuthenticatedSessionController::class, 'store'])
@@ -161,51 +163,53 @@ Route::get('/Categories', [CategoryController::class, 'getAllCategories']);
 
 //admin routes
 //tested
+Route::middleware(['auth:sanctum', AdminMiddleware::class])->group(function () {
+    //AdminController routes (User & Provider Management)
+    Route::get('/Users', [AdminController::class, 'getAllUsers']);
+    Route::get('/Users/{id}', [AdminController::class, 'getUserById']);
+    Route::delete('/Users/{id}', [AdminController::class, 'deleteUser']);
+    Route::get('/users-count', [AdminController::class, 'countOfUsers']);
 
-//AdminController routes (User & Provider Management)
-Route::get('/Users', [AdminController::class, 'getAllUsers']);
-Route::get('/Users/{id}', [AdminController::class, 'getUserById']);
-Route::delete('/Users/{id}', [AdminController::class, 'deleteUser']);
-Route::get('/users-count', [AdminController::class, 'countOfUsers']);
-
-Route::get('/Providers', [AdminController::class, 'getAllProviders']);
-Route::get('/Providers/{id}', [AdminController::class, 'getProviderById']);
-Route::put('/Providers/{userId}/review', [AdminController::class, 'reviewProviderStatus']);
-Route::get('/providers-count', [AdminController::class, 'countOfProviders']);
-Route::get('/Providers-pending', [AdminController::class, 'getPendingProviders']);
-Route::post('/providers', [AdminController::class, 'createProvider']);
-Route::get('/ApprovedSuspendedProviders', [AdminController::class, 'getApprovedSuspendedProviders']);
+    Route::get('/Providers', [AdminController::class, 'getAllProviders']);
+    Route::get('/Providers/{id}', [AdminController::class, 'getProviderById']);
+    Route::put('/Providers/{userId}/review', [AdminController::class, 'reviewProviderStatus']);
+    Route::get('/providers-count', [AdminController::class, 'countOfProviders']);
+    Route::get('/Providers-pending', [AdminController::class, 'getPendingProviders']);
+    Route::post('/providers', [AdminController::class, 'createProvider']);
+    Route::get('/ApprovedSuspendedProviders', [AdminController::class, 'getApprovedSuspendedProviders']);
 
 
-// Dashboard
-Route::get('/dashboard', [AdminController::class, 'dashboard']);
+    // Dashboard
+    Route::get('/dashboard', [AdminController::class, 'dashboard']);
 
-//admin profile
-Route::get('/profile', [AdminController::class, 'AdminProfile']);
+    //admin profile
+    Route::get('/profile', [AdminController::class, 'AdminProfile']);
 
-// Requests
-Route::get('/Requests', [AdminController::class, 'getAllServiceRequests']);
-Route::get('/Requests/{id}', [AdminController::class, 'getServiceRequestById']);
+    // Requests
+    Route::get('/Requests', [AdminController::class, 'getAllServiceRequests']);
+    Route::get('/Requests/{id}', [AdminController::class, 'getServiceRequestById']);
 
-//  Offers
-Route::get('/offers', [AdminController::class, 'getAllOffers']);
+    //  Offers
+    Route::get('/offers', [AdminController::class, 'getAllOffers']);
 
-// Category Routes
-Route::prefix('categories')->group(function () {
-    Route::get('/', [CategoryController::class, 'index']);
-    Route::get('/{id}', [CategoryController::class, 'show']);
-    Route::post('/', [CategoryController::class, 'store']);
-    Route::put('/{id}', [CategoryController::class, 'update']);
-    Route::delete('/{id}', [CategoryController::class, 'destroy']);
-});
+    // Category Routes
+    Route::prefix('categories')->group(function () {
+        Route::get('/', [CategoryController::class, 'index']);
+        Route::get('/{id}', [CategoryController::class, 'show']);
+        Route::post('/', [CategoryController::class, 'store']);
+        Route::put('/{id}', [CategoryController::class, 'update']);
+        Route::delete('/{id}', [CategoryController::class, 'destroy']);
+    });
 
-//  Service Routes
-Route::prefix('services')->group(function () {
-    Route::get('/', [ServiceController::class, 'index']);
-    Route::get('/{id}', [ServiceController::class, 'show']);
-    Route::post('/', [ServiceController::class, 'store']);
-    Route::put('/{id}', [ServiceController::class, 'update']);
-    Route::delete('/{id}', [ServiceController::class, 'destroy']);
+    //  Service Routes
+    Route::prefix('services')->group(function () {
+        Route::get('/', [ServiceController::class, 'index']);
+        Route::get('/{id}', [ServiceController::class, 'show']);
+        Route::post('/', [ServiceController::class, 'store']);
+        Route::put('/{id}', [ServiceController::class, 'update']);
+        Route::delete('/{id}', [ServiceController::class, 'destroy']);
+    });
+
 });
 
 //payment routes
