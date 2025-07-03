@@ -111,12 +111,12 @@ class AdminController extends Controller
             'service_id' => 'required|string|max:255',
             'national_id' => 'required|string|max:20|unique:users,national_id',
             'address' => 'required|string|max:255',
-            'phone' => 'required|string|max:20',
+            'phone' => ['required', 'string', 'max:20', 'unique:users,phone'],
             'police_certificate' => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048',
             'selfie' => 'required|file|mimes:jpg,jpeg,png|max:2048',
         ]);
 
-        $policePath = $request->file('police_certificate')->store('police_certificates', 'public');
+        $policePath = $request->file('police_certificate')->store('certificates', 'public');
         $selfiePath = $request->file('selfie')->store('selfies', 'public');
 
         $provider = User::create([
