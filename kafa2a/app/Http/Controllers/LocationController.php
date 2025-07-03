@@ -35,7 +35,13 @@ class LocationController extends Controller
         }
 
         $providers = $query
-            ->having("distance", "<", $radius)
+            ->whereRaw("(
+                6371 * acos(
+                    cos(radians(?)) * cos(radians(lat)) *
+                    cos(radians(lng) - radians(?)) +
+                    sin(radians(?)) * sin(radians(lat))
+                )
+            ) < ?", [$lat, $lng, $lat, $radius])
             ->orderBy("distance")
             ->get();
 
