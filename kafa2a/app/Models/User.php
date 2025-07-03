@@ -36,6 +36,8 @@ class User extends Authenticatable
         'gender',
         'police_certificate_path',
         'selfie_path',
+        'suspend_reason',
+        'rating',
     ];
 
     /**

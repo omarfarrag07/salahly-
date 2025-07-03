@@ -60,6 +60,8 @@ class RegisteredProviderController extends Controller
             'selfie_path' => $selfiePath,
         ]);
 
+        $provider->refresh();
+
         event(new Registered($provider));
 
         // Automatically log in the provider
