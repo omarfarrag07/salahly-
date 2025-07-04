@@ -23,7 +23,7 @@ class DatabaseSeeder extends Seeder
                 'name' => 'Super Admin',
                 'email' => 'admin@example.com',
                 'password' => Hash::make('password123'), 
-                'type' => 'admin',
+                'type' => 'Admin',
                 'phone' => '1234567890',
                 'address' => 'Admin HQ',
                 'email_verified_at' => now(),

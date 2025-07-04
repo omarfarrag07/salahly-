@@ -275,3 +275,8 @@ Route::post('/token', function (Request $request) {
     ]);
 });
 
+Route::get('/whoami', function (Request $r) {
+    return $r->user() ?: response()->json(['user' => null], 401);
+})->middleware('auth:sanctum');
+
+

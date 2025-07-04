@@ -13,7 +13,9 @@ class AdminMiddleware
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (auth()->check() && auth()->user()->type === 'admin') {
+        // $type = strtolower($request->user()?->type ?? '');
+        // print($type);
+        if (auth()->check() && auth()->user()->type === 'Admin') {
             return $next($request);
         }
         return response()->json(['error' => 'Unauthorized. Admins only.'], 403);
