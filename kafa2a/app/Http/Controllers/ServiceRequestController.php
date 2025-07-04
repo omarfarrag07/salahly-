@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\AcceptedOffer;
 use App\Models\ServiceRequest;
 use Illuminate\Http\Request;
-use App\Events\MyEvent;
 
 class ServiceRequestController extends Controller
 {
@@ -139,9 +138,9 @@ class ServiceRequestController extends Controller
         $request = ServiceRequest::findOrFail($id);
         $request->update(['status' => 'completed']);
 
-        event(new MyEvent('Your service request was completed!', $request->user_id));
         // Delete the related accepted offer(s)
         AcceptedOffer::where('service_request_id', $request->id)->delete();
+
         return response()->json($request);
     }
 }

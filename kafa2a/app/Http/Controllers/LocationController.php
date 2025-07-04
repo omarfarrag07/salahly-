@@ -16,8 +16,8 @@ class LocationController extends Controller
             'service_id' => 'nullable|integer',
         ]);
 
-        $lat = $request->latitude;
-        $lng = $request->longitude;
+        $lat = $request->lat;
+        $lng = $request->lng;
         $radius = $request->radius ?? 5;
 
         $query = User::selectRaw("*, (

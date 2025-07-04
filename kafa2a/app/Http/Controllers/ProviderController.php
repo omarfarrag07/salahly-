@@ -126,67 +126,70 @@ class ProviderController extends Controller
 
     public function sendOffer(Request $request, $id)
     {
-        $provider = auth()->user();
-        $serviceId = $provider->service_id;
+        try {
+            $provider = auth()->user();
+            $serviceId = $provider->service_id;
 
-        if (!$provider->isProvider()) {
-            return response()->json(['error' => 'Unauthorized.'], 403);
-        }
-
-        $request->validate([
-            'price' => 'required|numeric|min:0',
-            'message' => 'nullable|string|max:1000',
-        ]);
-
-        if (!$serviceId) {
-            return response()->json(['error' => 'No service linked.'], 404);
-        }
-
-        // Try to find the service request with the provider's service_id
-        $serviceRequest = \App\Models\ServiceRequest::with('service')
-            ->where('service_id', $serviceId)
-            ->find($id);
-
-        // Fallback to "others" if not found
-        if (!$serviceRequest) {
-            $othersService = \App\Models\Service::where('name', 'others')->first();
-            if ($othersService) {
-                $serviceRequest = \App\Models\ServiceRequest::with('service')
-                    ->where('service_id', $othersService->id)
-                    ->find($id);
+            if (!$provider->isProvider()) {
+                return response()->json(['error' => 'Unauthorized.'], 403);
             }
+
+            $validated = $request->validate([
+                'price' => 'required|numeric|min:0',
+                'message' => 'nullable|string|max:1000',
+            ]);
+
+            if (!$serviceId) {
+                return response()->json(['error' => 'No service linked.'], 404);
+            }
+
+            // Try to find the service request with the provider's service_id
+            $serviceRequest = \App\Models\ServiceRequest::with('service')
+                ->where('service_id', $serviceId)
+                ->find($id);
+
+            // Fallback to "others" if not found
+            if (!$serviceRequest) {
+                $othersService = \App\Models\Service::where('name', 'others')->first();
+                if ($othersService) {
+                    $serviceRequest = \App\Models\ServiceRequest::with('service')
+                        ->where('service_id', $othersService->id)
+                        ->find($id);
+                }
+            }
+
+            if (!$serviceRequest) {
+                return response()->json(['error' => 'Service request not found for your service.'], 404);
+            }
+
+            if ($serviceRequest->status !== 'pending') {
+                return response()->json(['error' => 'You can only offer on pending requests.'], 400);
+            }
+
+            if ($serviceRequest->offers()->where('provider_id', $provider->id)->exists()) {
+                return response()->json(['error' => 'You already made an offer.'], 409);
+            }
+
+            $offer = $serviceRequest->offers()->create([
+                'provider_id' => $provider->id,
+                'price' => $validated['price'],
+                'message' => $validated['message'] ?? null,
+            ]);
+
+            // Broadcast the event via Pusher
+            $user_id = $serviceRequest->user->id;
+            event(new \App\Events\MyEvent('Offer Sent Successfully!', $user_id));
+
+            return response()->json([
+                'message' => 'Offer Sent Successfully!',
+                'offer' => $offer,
+            ], 201);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json(['error' => $e->errors()], 422);
+        } catch (\Exception $e) {
+            // Optionally log the error: \Log::error($e);
+            return response()->json(['error' => 'An unexpected error occurred.'], 500);
         }
-
-        if (!$serviceRequest) {
-            return response()->json(['error' => 'Service request not found for your service.'], 404);
-        }
-
-        if ($serviceRequest->status !== 'pending') {
-            return response()->json(['error' => 'You can only offer on pending requests.'], 400);
-        }
-
-        if ($serviceRequest->offers()->where('provider_id', $provider->id)->exists()) {
-            return response()->json(['error' => 'You already made an offer.'], 409);
-        }
-
-        $offer = $serviceRequest->offers()->create([
-            'provider_id' => $provider->id,
-            'price' => $request->price,
-            'message' => $request->message,
-        ]);
-
-        // Broadcast the event via Pusher
-        $user_id = $serviceRequest->user->id;
-        event(new MyEvent('Offer Sent Successfully!', $user_id));
-
-        // Optionally notify the user as before
-        // $user = User::find($request->user_id);
-        // $user->notify(new NewOfferNotification($offer));
-
-        return response()->json([
-            'message' => 'Offer Sent Successfully!',
-            'offer' => $offer,
-        ], 201);
     }
 
     public function updateSelf(Request $request)
