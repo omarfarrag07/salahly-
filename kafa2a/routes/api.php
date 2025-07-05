@@ -154,6 +154,16 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // 3. Get a list of nearest providers for a specific service request (by id)
     Route::get('/service-requests/{id}/nearest-providers', [\App\Http\Controllers\LocationController::class, 'nearestProvidersToServiceRequest']);
+    Route::prefix('payments')->group(function () {
+        Route::get('/', [PaymentController::class, 'index']);          // Get all payments (admin or history)
+        Route::get('/{id}', [PaymentController::class, 'show']);       // Get a specific payment by ID
+        Route::post('/', [PaymentController::class, 'store']);         // Create a new payment (dummy, cash, etc.)
+        Route::delete('/{id}', [PaymentController::class, 'destroy']); // Delete a payment by ID (admin only)
+    
+        Route::get('/success', [PaymentController::class, 'success']); // Payment success callback (for gateways)
+        Route::get('/cancel', [PaymentController::class, 'cancel']);   // Payment cancel callback (for gateways)
+    });
+    
 });
 
 
@@ -216,15 +226,6 @@ Route::middleware(['auth:sanctum', AdminMiddleware::class])->group(function () {
 
 //payment routes
 
-Route::prefix('payments')->group(function () {
-    Route::get('/', [PaymentController::class, 'index']);          // Get all payments (admin or history)
-    Route::get('/{id}', [PaymentController::class, 'show']);       // Get a specific payment by ID
-    Route::post('/', [PaymentController::class, 'store']);         // Create a new payment (dummy, cash, etc.)
-    Route::delete('/{id}', [PaymentController::class, 'destroy']); // Delete a payment by ID (admin only)
-
-    Route::get('/success', [PaymentController::class, 'success']); // Payment success callback (for gateways)
-    Route::get('/cancel', [PaymentController::class, 'cancel']);   // Payment cancel callback (for gateways)
-});
 
 Route::prefix('ratings')->group(
     function () {

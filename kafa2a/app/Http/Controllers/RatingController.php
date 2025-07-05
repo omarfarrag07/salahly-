@@ -14,36 +14,39 @@ class RatingController extends Controller
     public function store(Request $request)
     {
         $user = auth()->user();
-
+    
         if (!$user->isUser()) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
-
+    
         $validated = $request->validate([
             'service_request_id' => 'required|exists:service_requests,id',
             'rating' => 'required|integer|min:1|max:5',
             'review' => 'nullable|string|max:10000',
         ]);
-
-        // Check if this service request belongs to the user
+    
         $acceptedOffer = \App\Models\AcceptedOffer::where('service_request_id', $validated['service_request_id'])
             ->whereHas('request', function ($q) use ($user) {
                 $q->where('user_id', $user->id);
             })
             ->first();
-
+    
         if (!$acceptedOffer) {
-            return response()->json(['message' => 'You can only rate accepted offers .'], 403);
+            return response()->json(['message' => 'You can only rate accepted offers.'], 403);
         }
-
+    
+        if ($acceptedOffer->request->status !== 'paid') {
+            return response()->json(['message' => 'You can only rate after payment is completed.'], 403);
+        }
+    
         $existing = Rating::where('user_id', $user->id)
             ->where('service_request_id', $validated['service_request_id'])
             ->first();
-
+    
         if ($existing) {
             return response()->json(['message' => 'You already rated this request'], 400);
         }
-
+    
         $rating = Rating::create([
             'user_id' => $user->id,
             'provider_id' => $acceptedOffer->offer->provider_id,
@@ -51,11 +54,12 @@ class RatingController extends Controller
             'rating' => $validated['rating'],
             'review' => $validated['review'] ?? null,
         ]);
-
+    
         $this->updateBayesianRating($acceptedOffer->offer->provider_id, $validated['rating']);
-
+    
         return response()->json($rating, 201);
     }
+   
 
     public function index(Request $request)
     {
