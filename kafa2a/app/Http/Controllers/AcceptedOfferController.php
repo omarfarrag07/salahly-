@@ -17,6 +17,7 @@ class AcceptedOfferController extends Controller
             ->whereHas('request', function ($query) use ($userId) {
                 $query->where('user_id', $userId);
             })
+            ->where('status', 'pending')
             ->paginate(10);
 
         return response()->json($acceptedOffers);
@@ -27,6 +28,7 @@ class AcceptedOfferController extends Controller
         $userId = auth()->id();
         $acceptedOffers = AcceptedOffer::with(['offer.provider', 'request.user'])
             ->where('provider_id', $userId)
+            ->where('status', 'pending')
             ->paginate(10);
 
         return response()->json($acceptedOffers);
@@ -51,6 +53,7 @@ class AcceptedOfferController extends Controller
             ->whereHas('serviceRequest', function ($query) use ($userId) {
                 $query->where('user_id', $userId);
             })
+            ->where('status', 'pending')
             ->paginate(10);
 
         return response()->json($acceptedOffers);

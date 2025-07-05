@@ -14,6 +14,7 @@ return new class extends Migration {
             $table->id();
             $table->foreignId('offer_id')->constrained()->onDelete('cascade');
             $table->foreignId('service_request_id')->constrained()->onDelete('cascade');
+            $table->string('status')->default('pending'); // pending , paid 
             $table->timestamps();
         });
     }
