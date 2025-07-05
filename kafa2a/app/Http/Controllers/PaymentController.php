@@ -82,6 +82,13 @@ class PaymentController extends Controller
             ], 400);
         }
 
+        // Update the status of the related AcceptedOffer to 'paid'
+        $acceptedOffer = AcceptedOffer::where('offer_id', $validated['offer_id'])->first();
+        if ($acceptedOffer) {
+            $acceptedOffer->status = 'done';
+            $acceptedOffer->save();
+        }
+
         $serviceRequest->status = 'paid';
         $serviceRequest->save();
 

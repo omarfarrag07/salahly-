@@ -62,6 +62,12 @@ class RatingController extends Controller
             'review' => $validated['review'] ?? null,
         ]);
 
+        $acceptedOffer = AcceptedOffer::where('offer_id', $validated['offer_id'])->first();
+        if ($acceptedOffer) {
+            $acceptedOffer->status = 'done';
+            $acceptedOffer->save();
+        }
+
         $this->updateBayesianRating($providerId, $validated['rating']);
 
         return response()->json($rating, 201);

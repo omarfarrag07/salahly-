@@ -139,7 +139,7 @@ class ServiceRequestController extends Controller
         $request->update(['status' => 'completed']);
 
         // Delete the related accepted offer(s)
-        AcceptedOffer::where('service_request_id', $request->id)->delete();
+        // AcceptedOffer::where('service_request_id', $request->id)->delete();
 
         return response()->json($request);
     }
