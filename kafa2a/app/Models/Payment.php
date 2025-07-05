@@ -11,6 +11,7 @@ class Payment extends Model
         'user_id',
         'provider_id',
         'service_request_id',
+        'offer_id', // Nullable foreign key to AcceptedOffer
         'gateway',
         'amount',
         'status',
@@ -35,5 +36,9 @@ class Payment extends Model
     public function serviceRequest(): BelongsTo
     {
         return $this->belongsTo(ServiceRequest::class);
+    }
+    public function offer(): BelongsTo
+    {
+        return $this->belongsTo(AcceptedOffer::class, 'offer_id');
     }
 }

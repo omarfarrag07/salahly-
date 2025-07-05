@@ -23,6 +23,7 @@ class RatingController extends Controller
             'service_request_id' => 'required|exists:service_requests,id',
             'rating' => 'required|integer|min:1|max:5',
             'review' => 'nullable|string|max:10000',
+            'offer_id' => 'nullable|exists:offers,id', // Ensure offer_id is provided
         ]);
 
         $serviceRequest = \App\Models\ServiceRequest::where('id', $validated['service_request_id'])
@@ -45,7 +46,7 @@ class RatingController extends Controller
             return response()->json(['message' => 'You already rated this request'], 400);
         }
 
-        $offer = AcceptedOffer::where('service_request_id', $validated['service_request_id']);
+        $offer = AcceptedOffer::where('offer_id', $validated['offer_id']);
         if (!$offer) {
             return response()->json(['message' => 'No offer found for this request'], 404);
         }
@@ -56,6 +57,7 @@ class RatingController extends Controller
             'user_id' => $user->id,
             'provider_id' => $providerId,
             'service_request_id' => $validated['service_request_id'],
+            'offer_id' => $validated['offer_id'] ?? null,
             'rating' => $validated['rating'],
             'review' => $validated['review'] ?? null,
         ]);

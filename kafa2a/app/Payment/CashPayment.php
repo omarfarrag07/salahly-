@@ -18,6 +18,7 @@ class CashPayment implements PaymentInterface
             'status' => 'paid',
             'transaction_id' => uniqid(rand(1000, 9999), true),
             'paid_at' => Carbon::now(),
+            'offer_id' => $data['offer_id'] ?? null, // Nullable foreign key to AcceptedOffer
         ]);
     }
 }

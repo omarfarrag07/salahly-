@@ -36,6 +36,7 @@ class PaymentController extends Controller
             'amount' => 'required|numeric|min:1',
             'gateway' => 'required|string|in:paypal,stripe,cash,credit',
             'service_request_id' => 'required|exists:service_requests,id',
+            'offer_id' => 'nullable|exists:offers,id', // Ensure offer_id is provided
         ]);
 
         $serviceRequest = ServiceRequest::with('user')->findOrFail($validated['service_request_id']);
@@ -52,7 +53,7 @@ class PaymentController extends Controller
             return response()->json(['message' => 'You can only pay after the service is completed.'], 403);
         }
 
-        $offer = \App\Models\AcceptedOffer::where('service_request_id', $validated['service_request_id']);
+        $offer = AcceptedOffer::where('offer_id', $validated['offer_id']);
         if (!$offer) {
             return response()->json(['message' => 'No offer found for this service request.'], 404);
         }
@@ -72,6 +73,7 @@ class PaymentController extends Controller
                 'amount' => $validated['amount'],
                 'service_request_id' => $validated['service_request_id'],
                 'provider_id' => $providerId,
+                'offer_id' => $validated['offer_id'] ?? null,
             ]);
         } catch (\Exception $e) {
             return response()->json([

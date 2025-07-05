@@ -15,6 +15,7 @@ return new class extends Migration {
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->foreignId('provider_id')->constrained('users')->onDelete('cascade');
             $table->foreignId('service_request_id')->constrained()->onDelete('cascade');
+            $table->foreignId('offer_id')->nullable()->constrained('offers')->onDelete('set null');
             $table->string('gateway'); // e.g., paypal, cash
             $table->decimal('amount', 10, 2);
             $table->string('transaction_id')->nullable(); // gateway reference
