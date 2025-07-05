@@ -14,45 +14,44 @@ class RatingController extends Controller
     public function store(Request $request)
     {
         $user = auth()->user();
-    
+
         if (!$user->isUser()) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
-    
+
         $validated = $request->validate([
             'service_request_id' => 'required|exists:service_requests,id',
             'rating' => 'required|integer|min:1|max:5',
             'review' => 'nullable|string|max:10000',
         ]);
-    
+
         $serviceRequest = \App\Models\ServiceRequest::where('id', $validated['service_request_id'])
             ->where('user_id', $user->id)
             ->first();
-    
+
         if (!$serviceRequest) {
             return response()->json(['message' => 'You can only rate your own service requests.'], 403);
         }
-    
+
         if ($serviceRequest->status !== 'paid') {
             return response()->json(['message' => 'You can only rate after payment is completed.'], 403);
         }
-    
+
         $existing = Rating::where('user_id', $user->id)
             ->where('service_request_id', $validated['service_request_id'])
             ->first();
-    
+
         if ($existing) {
             return response()->json(['message' => 'You already rated this request'], 400);
         }
-    
-        $offer = \App\Models\Offer::where('service_request_id', $validated['service_request_id'])->first();
-    
+
+        $offer = AcceptedOffer::where('service_request_id', $validated['service_request_id']);
         if (!$offer) {
             return response()->json(['message' => 'No offer found for this request'], 404);
         }
-    
+
         $providerId = $offer->provider_id;
-    
+
         $rating = Rating::create([
             'user_id' => $user->id,
             'provider_id' => $providerId,
@@ -60,12 +59,12 @@ class RatingController extends Controller
             'rating' => $validated['rating'],
             'review' => $validated['review'] ?? null,
         ]);
-    
+
         $this->updateBayesianRating($providerId, $validated['rating']);
-    
+
         return response()->json($rating, 201);
     }
-    
+
 
     public function show($id)
     {
@@ -137,22 +136,22 @@ class RatingController extends Controller
         ]);
     }
     public function getProviderRatingAndReviews($providerId)
-{
-    $provider = User::where('id', $providerId)
-        ->where('type', 'Provider')
-        ->firstOrFail();
+    {
+        $provider = User::where('id', $providerId)
+            ->where('type', 'Provider')
+            ->firstOrFail();
 
-    $reviews = Rating::with('user:id,name')
-        ->where('provider_id', $providerId)
-        ->latest()
-        ->take(5)
-        ->get(['id', 'user_id', 'rating', 'review']);
+        $reviews = Rating::with('user:id,name')
+            ->where('provider_id', $providerId)
+            ->latest()
+            ->take(5)
+            ->get(['id', 'user_id', 'rating', 'review']);
 
-    return response()->json([
-        'provider_name' => $provider->name,
-        'rating' => $provider->rating, 
-        'reviews' => $reviews
-    ]);
-}
+        return response()->json([
+            'provider_name' => $provider->name,
+            'rating' => $provider->rating,
+            'reviews' => $reviews
+        ]);
+    }
 
 }
