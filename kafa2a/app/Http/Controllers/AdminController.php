@@ -2,106 +2,133 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
-use App\Models\Provider;
-use App\Models\ServiceRequest;
-use App\Models\Offer;
-use App\Models\AcceptedOffer;
-use App\Models\Category;
-use App\Models\Service;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-
+use App\Services\AdminService;
 
 class AdminController extends Controller
 {
-    public function dashboard()
-    {
-        $usersCount = User::where('type','user')->count();
-        $ApprovedProvidersCount = User::where('type', 'Provider')->where('status', 'approved')->count();
-        $SuspendedProvidersCount = User::where('type', 'Provider')->where('status', 'suspended')->count();
-        $providersCount = $ApprovedProvidersCount + $SuspendedProvidersCount;
-        $PendingProvidersCount = User::where('type', 'Provider')->where('status', 'pending')->count();     
+    protected AdminService $adminService;
 
-        return response()->json([
-            'users' => $usersCount,
-            'approvedProviders' => $ApprovedProvidersCount,
-            'suspendedProviders' => $SuspendedProvidersCount,
-            'providers' => $providersCount,
-            'PendingProviders'=>$PendingProvidersCount
-        ]);
+    public function __construct(AdminService $adminService)
+    {
+        $this->adminService = $adminService;
     }
 
+    /**
+     * Get dashboard statistics
+     */
+    public function dashboard()
+    {
+        $stats = $this->adminService->getDashboardStatistics();
+        return response()->json($stats);
+    }
+
+    /**
+     * Get all users with pagination
+     */
     public function getAllUsers()
     {
-        $users = User::where('type', 'user')->latest()->paginate(10);
+        $users = $this->adminService->getAllUsers(10);
         return response()->json($users);
     }
 
+    /**
+     * Get all providers with pagination
+     */
     public function getAllProviders()
     {
-        $providers = User::where('type', 'Provider')->latest()->paginate(10);
+        $providers = $this->adminService->getAllProviders(10);
         return response()->json($providers);
     }
+
+    /**
+     * Get user by ID
+     */
     public function getUserById($id)
     {
-
-        $User = User::where('type', 'user')->findOrFail($id);
-        return response()->json($User);
+        try {
+            $user = $this->adminService->getUserById($id);
+            return response()->json($user);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'User not found'], 404);
+        }
     }
-    
+
+    /**
+     * Get provider by ID
+     */
     public function getProviderById($id)
     {
-        $provider = User::where('type', 'Provider')->findOrFail($id);
-        return response()->json($provider);
+        try {
+            $provider = $this->adminService->getProviderById($id);
+            return response()->json($provider);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Provider not found'], 404);
+        }
     }
+
+    /**
+     * Delete a user
+     */
     public function deleteUser($id)
     {
-        $user = User::findOrFail($id);
-        $user->delete();
-
-        return response()->json(['message' => 'User deleted']);
+        try {
+            $this->adminService->deleteUser($id);
+            return response()->json(['message' => 'User deleted']);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'User not found'], 404);
+        }
     }
 
-
+    /**
+     * Get user count
+     */
     public function countOfUsers()
     {
-        $usersCount = User::where('type', 'user')->count();
-        return response()->json(['users' => $usersCount]);      
+        $count = $this->adminService->countUsers();
+        return response()->json(['users' => $count]);
     }
+
+    /**
+     * Get provider count
+     */
     public function countOfProviders()
     {
-        $providersCount = User::where('type', 'Provider')->count();
-        return response()->json([ 'providers' => $providersCount]);
+        $count = $this->adminService->countProviders();
+        return response()->json(['providers' => $count]);
     }
+
+    /**
+     * Get pending providers
+     */
     public function getPendingProviders()
     {
-        $providers = User::where('type', 'Provider')->where('status', 'pending')->latest()->get();
+        $providers = $this->adminService->getPendingProviders();
         return response()->json($providers);
     }
 
-        public function getApprovedSuspendedProviders()
+    /**
+     * Get approved and suspended providers
+     */
+    public function getApprovedSuspendedProviders()
     {
-        $providers = User::where('type', 'Provider')
-            ->whereIn('status', ['approved', 'suspended'])
-            ->latest()
-            ->get();
-
+        $providers = $this->adminService->getApprovedAndSuspendedProviders();
         return response()->json($providers);
     }
 
+    /**
+     * Get authenticated admin's profile
+     */
     public function AdminProfile()
     {
         $admin = auth()->user();
-    
-        return response()->json([
-            'name' => $admin->name,
-            'email' => $admin->email,
-            'phone' => $admin->phone,
-        ]);
+        $profile = $this->adminService->getAdminProfile($admin);
+        return response()->json($profile);
     }
-    
-    
+
+    /**
+     * Create a new provider
+     */
     public function createProvider(Request $request)
     {
         $request->validate([
@@ -116,83 +143,81 @@ class AdminController extends Controller
             'selfie' => 'required|file|mimes:jpg,jpeg,png|max:2048',
         ]);
 
-        $policePath = $request->file('police_certificate')->store('certificates', 'public');
-        $selfiePath = $request->file('selfie')->store('selfies', 'public');
+        try {
+            // Store uploaded files
+            $policePath = $request->file('police_certificate')->store('certificates', 'public');
+            $selfiePath = $request->file('selfie')->store('selfies', 'public');
 
-        $provider = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'service_id' => $request->service_id,
-            'national_id' => $request->national_id,
-            'address' => $request->address,
-            'phone' => $request->phone,
-            'type' => 'Provider',
-            'status' => 'approved',
-            'police_certificate_path' => $policePath,
-            'selfie_path' => $selfiePath,
-        ]);
+            $providerData = array_merge($request->validated(), [
+                'police_certificate_path' => $policePath,
+                'selfie_path' => $selfiePath,
+            ]);
 
-        return response()->json([
-            'message' => 'Provider created successfully.',
-            'provider' => $provider
-        ], 201);
+            $provider = $this->adminService->createProvider($providerData);
+
+            return response()->json([
+                'message' => 'Provider created successfully.',
+                'provider' => $provider
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Error creating provider: ' . $e->getMessage()], 400);
+        }
     }
+
+    /**
+     * Get all service requests with pagination
+     */
     public function getAllServiceRequests()
     {
-        $requests = ServiceRequest::with(['user', 'service'])->latest()->paginate(10);
+        $requests = $this->adminService->getAllServiceRequests(10);
         return response()->json($requests);
     }
+
+    /**
+     * Get service request by ID
+     */
     public function getServiceRequestById($id)
     {
-        $request = ServiceRequest::with(['user', 'service', 'acceptedOffer.offer.provider'])->findOrFail($id);
-        return response()->json($request);
+        try {
+            $request = $this->adminService->getServiceRequestById($id);
+            return response()->json($request);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Service request not found'], 404);
+        }
     }
-    
-    
+
+    /**
+     * Review and update provider status
+     */
     public function reviewProviderStatus(Request $request, $id)
     {
-        $provider = User::where('type', 'Provider')->findOrFail($id);
-    
-        $allowedStatuses = ['pending', 'approved', 'rejected', 'suspended'];
-        $status = $request->input('status');
-    
-        if (!$status || !in_array($status, $allowedStatuses)) {
-            return response()->json([
-                'error' => 'Invalid status. Allowed values are: pending, approved, rejected, suspended.'
-            ], 422);
-        }
-    
-        $suspendReason = $request->input('suspend_reason');
-        if ($status === 'suspended' && (empty($suspendReason))) {
-            return response()->json([
-                'error' => 'Suspension reason is required and must be less than 1000 characters.'
-            ], 422);
-        }
-
-    
-        $provider->status = $status;
-        $provider->suspend_reason = $status === 'suspended' ? $suspendReason : null;
-        $provider->save();
-    
-        return response()->json([
-            'message' => 'Provider status updated successfully.'
+        $request->validate([
+            'status' => 'required|string|in:pending,approved,rejected,suspended',
+            'suspend_reason' => 'required_if:status,suspended|string|max:1000',
         ]);
+
+        try {
+            $provider = $this->adminService->updateProviderStatus(
+                $id,
+                $request->status,
+                $request->suspend_reason
+            );
+
+            return response()->json([
+                'message' => 'Provider status updated successfully.',
+                'provider' => $provider,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 422);
+        }
     }
+
+    /**
+     * Get all offers (accepted and unaccepted)
+     */
     public function getAllOffers()
     {
-        $accepted = AcceptedOffer::with(['offer.provider', 'request.user'])->latest()->get();
-    
-        $unaccepted = Offer::whereNotIn('id', AcceptedOffer::pluck('offer_id'))
-            ->with('provider')
-            ->latest()
-            ->get();
-    
-        return response()->json([
-            'accepted_offers' => $accepted,
-            'unaccepted_offers' => $unaccepted
-        ]);
+        $offers = $this->adminService->getAllOffers();
+        return response()->json($offers);
     }
-   
-    
 }
