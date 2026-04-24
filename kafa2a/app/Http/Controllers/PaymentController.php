@@ -53,11 +53,11 @@ class PaymentController extends Controller
             return response()->json(['message' => 'You can only pay after the service is completed.'], 403);
         }
 
-        $offer = AcceptedOffer::where('offer_id', $validated['offer_id']);
+        $offerId = $validated['offer_id'] ?? null;
+        $offer = AcceptedOffer::where('offer_id', $offerId)->first();
         if (!$offer) {
             return response()->json(['message' => 'No offer found for this service request.'], 404);
         }
-
         $providerId = $offer->provider_id;
 
         $strategy = match ($validated['gateway']) {
@@ -73,7 +73,7 @@ class PaymentController extends Controller
                 'amount' => $validated['amount'],
                 'service_request_id' => $validated['service_request_id'],
                 'provider_id' => $providerId,
-                'offer_id' => $validated['offer_id'] ?? null,
+                'offer_id' => $offerId,
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -82,10 +82,10 @@ class PaymentController extends Controller
             ], 400);
         }
 
-        // Update the status of the related AcceptedOffer to 'paid'
+        // Update the status of the related AcceptedOffer to 'done'
         $acceptedOffer = AcceptedOffer::where('offer_id', $validated['offer_id'])->first();
         if ($acceptedOffer) {
-            $acceptedOffer->status = 'done';
+            $acceptedOffer->status = 'paid';
             $acceptedOffer->save();
         }
 

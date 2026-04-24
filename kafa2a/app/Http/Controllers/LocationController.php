@@ -99,7 +99,7 @@ class LocationController extends Controller
         $providers = User::selectRaw("*, (
         6371 * acos(
             cos(radians(?)) * cos(radians(lat)) *
-            cos(radians(lng) - radians(?)) +
+            cos(radians(lng) - radians(?)) + 
             sin(radians(?)) * sin(radians(lat))
         )
     ) AS distance", [
