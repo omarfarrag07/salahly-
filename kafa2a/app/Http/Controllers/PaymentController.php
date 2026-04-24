@@ -3,109 +3,70 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Payment;
-use App\Models\ServiceRequest;
-use App\Models\User;
-use App\Payment\CashPayment;
-use App\Payment\PayPalPayment;
-use App\Payment\StripePayment;
-use App\Models\AcceptedOffer;
-
+use App\Services\PaymentService;
 
 class PaymentController extends Controller
 {
+    protected PaymentService $paymentService;
 
-    // List all payments (admin or user history)
-
-    public function index()
+    public function __construct(PaymentService $paymentService)
     {
-        return response()->json(
-            Payment::with(['user', 'provider', 'serviceRequest'])->get()
-        );
+        $this->paymentService = $paymentService;
     }
 
+    /**
+     * List all payments (admin or user history)
+     */
+    public function index()
+    {
+        $payments = $this->paymentService->getAllPayments();
+        return response()->json($payments);
+    }
+
+    /**
+     * Process payment for a completed service request
+     */
     public function store(Request $request)
     {
         $user = auth()->user();
 
-        if (!$user || !$user->isUser()) {
-            return response()->json(['message' => 'Unauthorized. Only users can perform this action.'], 403);
+        if (!$user) {
+            return response()->json(['message' => 'Unauthorized'], 401);
         }
 
         $validated = $request->validate([
             'amount' => 'required|numeric|min:1',
             'gateway' => 'required|string|in:paypal,stripe,cash,credit',
             'service_request_id' => 'required|exists:service_requests,id',
-            'offer_id' => 'nullable|exists:offers,id', // Ensure offer_id is provided
+            'offer_id' => 'nullable|exists:offers,id',
         ]);
 
-        $serviceRequest = ServiceRequest::with('user')->findOrFail($validated['service_request_id']);
-
-        if ($serviceRequest->user_id !== $user->id) {
-            return response()->json(['message' => 'You can only pay for your own service requests.'], 403);
-        }
-
-        if (Payment::where('service_request_id', $validated['service_request_id'])->exists()) {
-            return response()->json(['message' => 'Payment already made for this request'], 409);
-        }
-
-        if ($serviceRequest->status !== 'completed') {
-            return response()->json(['message' => 'You can only pay after the service is completed.'], 403);
-        }
-
-        $offerId = $validated['offer_id'] ?? null;
-        $offer = AcceptedOffer::where('offer_id', $offerId)->first();
-        if (!$offer) {
-            return response()->json(['message' => 'No offer found for this service request.'], 404);
-        }
-        $providerId = $offer->provider_id;
-
-        $strategy = match ($validated['gateway']) {
-            'paypal' => new PayPalPayment(),
-            'stripe' => new StripePayment(),
-            'credit' => new CreditPayment(),
-            default => new CashPayment(),
-        };
-
         try {
-            $payment = $strategy->pay([
-                'user_id' => $user->id,
-                'amount' => $validated['amount'],
-                'service_request_id' => $validated['service_request_id'],
-                'provider_id' => $providerId,
-                'offer_id' => $offerId,
-            ]);
+            $payment = $this->paymentService->processPayment($user, $validated);
+
+            return response()->json([
+                'message' => 'Payment processed successfully.',
+                'payment' => $payment,
+            ], 201);
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Payment error',
                 'error' => $e->getMessage(),
             ], 400);
         }
-
-        // Update the status of the related AcceptedOffer to 'done'
-        $acceptedOffer = AcceptedOffer::where('offer_id', $validated['offer_id'])->first();
-        if ($acceptedOffer) {
-            $acceptedOffer->status = 'paid';
-            $acceptedOffer->save();
-        }
-
-        $serviceRequest->status = 'paid';
-        $serviceRequest->save();
-
-        return response()->json([
-            'message' => 'Payment processed successfully.',
-            'payment' => $payment,
-        ], 201);
     }
 
-
-
+    /**
+     * Payment success callback
+     */
     public function success()
     {
         return response()->json(['message' => 'Payment succeeded']);
     }
 
-
+    /**
+     * Payment cancellation callback
+     */
     public function cancel()
     {
         return response()->json(['message' => 'Payment cancelled']);

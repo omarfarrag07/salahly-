@@ -2,39 +2,60 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\AcceptedOffer;
 use App\Models\ServiceRequest;
 use Illuminate\Http\Request;
+use App\Services\ServiceRequestService;
 
 class ServiceRequestController extends Controller
 {
+    protected ServiceRequestService $serviceRequestService;
+
+    public function __construct(ServiceRequestService $serviceRequestService)
+    {
+        $this->serviceRequestService = $serviceRequestService;
+    }
+
+    /**
+     * Get pending requests for authenticated user
+     */
     public function index()
     {
-        $requests = ServiceRequest::with(['service', 'user'])
-            ->where('user_id', auth()->id()) // Only the authenticated user's requests
-            ->where('status', 'pending')     // Only show pending requests
-            ->when(request('status'), fn($q, $status) => $q->where('status', $status))
-            ->when(request('service_id'), fn($q, $id) => $q->where('service_id', $id))
-            ->latest()
-            ->paginate(10);
+        $filters = [
+            'status' => request('status'),
+            'service_id' => request('service_id'),
+        ];
+
+        $requests = $this->serviceRequestService->getPendingRequests(
+            auth()->user(),
+            $filters,
+            10
+        );
 
         return response()->json($requests);
     }
 
-
+    /**
+     * Get all requests for authenticated user (any status)
+     */
     public function showAllRequests()
     {
-        $requests = ServiceRequest::with(['service', 'user'])
-            ->where('user_id', auth()->id())
-            ->when(request('status'), fn($q, $status) => $q->where('status', $status))
-            ->latest()
-            ->paginate(10);
+        $filters = [
+            'status' => request('status'),
+            'service_id' => request('service_id'),
+        ];
+
+        $requests = $this->serviceRequestService->getAllUserRequests(
+            auth()->user(),
+            $filters,
+            10
+        );
 
         return response()->json($requests);
     }
 
-
-
+    /**
+     * Create a new service request
+     */
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -48,99 +69,92 @@ class ServiceRequestController extends Controller
             'price' => 'required|numeric|min:0',
         ]);
 
-        $serviceRequest = auth()->user()->serviceRequests()->create([
-            ...$validated,
-            'status' => 'pending',
-        ]);
-
-        return response()->json($serviceRequest, 201);
+        try {
+            $serviceRequest = $this->serviceRequestService->createRequest(auth()->user(), $validated);
+            return response()->json($serviceRequest, 201);
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 400);
+        }
     }
 
+    /**
+     * Get service request details with pending offers
+     */
     public function show($id)
     {
-        $request = ServiceRequest::with([
-            'user',
-            'service',
-            'offers' => function ($query) {
-                $query->where('status', 'pending')->with(['provider', 'serviceRequest']);
-            }
-        ])->findOrFail($id);
-
-        return response()->json($request);
+        try {
+            $request = $this->serviceRequestService->getRequestDetails($id);
+            return response()->json($request);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Service request not found'], 404);
+        }
     }
 
+    /**
+     * Update a service request
+     */
     public function update(Request $request, $id)
     {
-        $serviceRequest = ServiceRequest::findOrFail($id);
-
-        if ($serviceRequest->user_id !== auth()->id()) {
-            return response()->json(['message' => 'Unauthorized'], 403);
-        }
-
         $validated = $request->validate([
             'description' => 'sometimes|string|max:500',
             'title' => 'sometimes|string|max:255',
-            'lat' => 'sometimes|string|max:20',
-            'lng' => 'sometimes|string|max:20',
+            'lat' => 'sometimes|numeric|between:-90,90',
+            'lng' => 'sometimes|numeric|between:-180,180',
             'address' => 'sometimes|string',
             'scheduled_at' => 'nullable|date|after:now',
             'price' => 'sometimes|numeric|min:0',
         ]);
 
-        $serviceRequest->update($validated);
-
-        return response()->json($serviceRequest);
+        try {
+            $serviceRequest = $this->serviceRequestService->updateRequest($id, auth()->user(), $validated);
+            return response()->json($serviceRequest);
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 403);
+        }
     }
 
+    /**
+     * Delete a pending service request
+     */
     public function destroy($id)
     {
-        $request = ServiceRequest::findOrFail($id);
-
-        if ($request->user_id !== auth()->id()) {
-            return response()->json(['message' => 'Unauthorized'], 403);
+        try {
+            $this->serviceRequestService->deleteRequest($id, auth()->user());
+            return response()->json(['message' => 'Request deleted successfully']);
+        } catch (\Exception $e) {
+            return response()->json(
+                ['message' => $e->getMessage()],
+                in_array($e->getMessage(), ['Unauthorized']) ? 403 : 400
+            );
         }
-
-        if ($request->status !== 'pending') {
-            return response()->json(['message' => 'Only pending requests can be deleted'], 400);
-        }
-
-        $request->delete();
-
-        return response()->json(['message' => 'Request deleted successfully']);
     }
 
-    // public function accept(ServiceRequest $request)
-    // {
-    //     $request->update(['status' => 'accepted']);
-    //     AcceptedOffer::create([
-    //         'service_request_id' => $request->id,
-    //         'provider_id' => auth()->id(),
-    //     ]);
-    //     //ToDo: Notify the user about the acceptance
-    //     // event(new RequestAccepted($request)); // you can define this event similarly
-
-    //     // return response()->json(['message' => 'Request accepted']);
-
-    //     return response()->json($request);
-    // }
-
+    /**
+     * Cancel a pending service request
+     */
     public function cancel($id)
     {
-        $request = ServiceRequest::findOrFail($id);
-        abort_if($request->user_id !== auth()->id(), 403);
-        abort_if($request->status !== 'pending', 400, 'Only pending requests can be canceled');
-        $request->update(['status' => 'canceled']);
-        return response()->json($request);
+        try {
+            $request = $this->serviceRequestService->cancelRequest($id, auth()->user());
+            return response()->json($request);
+        } catch (\Exception $e) {
+            return response()->json(
+                ['message' => $e->getMessage()],
+                in_array($e->getMessage(), ['Unauthorized']) ? 403 : 400
+            );
+        }
     }
 
+    /**
+     * Mark a service request as completed
+     */
     public function complete($id)
     {
-        $request = ServiceRequest::findOrFail($id);
-        $request->update(['status' => 'completed']);
-
-        // Delete the related accepted offer(s)
-        // AcceptedOffer::where('service_request_id', $request->id)->delete();
-
-        return response()->json($request);
+        try {
+            $request = $this->serviceRequestService->completeRequest($id);
+            return response()->json($request);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Service request not found'], 404);
+        }
     }
 }

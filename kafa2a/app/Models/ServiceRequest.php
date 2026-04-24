@@ -46,4 +46,48 @@ class ServiceRequest extends Model
         return $this->hasOne(AcceptedOffer::class);
     }
 
+    /**
+     * Check if request is in pending status
+     */
+    public function isPending(): bool
+    {
+        return $this->status === 'pending';
+    }
+
+    /**
+     * Check if request can be deleted (only pending requests)
+     */
+    public function canBeDeleted(): bool
+    {
+        return $this->isPending();
+    }
+
+    /**
+     * Cancel this pending request
+     * 
+     * @throws \Illuminate\Validation\ValidationException If not pending
+     * @return $this
+     */
+    public function cancel(): self
+    {
+        if (!$this->isPending()) {
+            throw \Illuminate\Validation\ValidationException::withMessages([
+                'status' => 'Only pending requests can be canceled.',
+            ]);
+        }
+
+        $this->update(['status' => 'canceled']);
+        return $this;
+    }
+
+    /**
+     * Mark request as completed
+     * @return $this
+     */
+    public function complete(): self
+    {
+        $this->update(['status' => 'completed']);
+        return $this;
+    }
+
 }

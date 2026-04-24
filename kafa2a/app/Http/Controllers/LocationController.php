@@ -3,121 +3,76 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\User;
+use App\Services\LocationService;
 
 class LocationController extends Controller
 {
+    protected LocationService $locationService;
+
+    public function __construct(LocationService $locationService)
+    {
+        $this->locationService = $locationService;
+    }
+
+    /**
+     * Get nearby providers within a given radius
+     */
     public function getNearbyProviders(Request $request)
     {
         $request->validate([
-            'lat' => 'required|numeric',
-            'lng' => 'required|numeric',
-            'radius' => 'nullable|numeric', // radius in km, default to 5km
-            'service_id' => 'nullable|integer',
+            'lat' => 'required|numeric|between:-90,90',
+            'lng' => 'required|numeric|between:-180,180',
+            'radius' => 'nullable|numeric|min:0.1', // radius in km, default to 5km
+            'service_id' => 'nullable|integer|exists:services,id',
         ]);
 
-        $lat = $request->lat;
-        $lng = $request->lng;
-        $radius = $request->radius ?? 5;
+        try {
+            $providers = $this->locationService->getNearbyProviders(
+                $request->lat,
+                $request->lng,
+                $request->radius ?? 5,
+                $request->service_id
+            );
 
-        $query = User::selectRaw("*, (
-                6371 * acos(
-                    cos(radians(?)) * cos(radians(lat)) *
-                    cos(radians(lng) - radians(?)) +
-                    sin(radians(?)) * sin(radians(lat))
-                )
-            ) AS distance", [$lat, $lng, $lat])
-            ->where('type', 'Provider')
-            ->where('status', 'approved');
-
-        if ($request->filled('service_id')) {
-            $query->where('service_id', $request->service_id);
+            return response()->json($providers);
+        } catch (\InvalidArgumentException $e) {
+            return response()->json(['message' => $e->getMessage()], 400);
         }
-
-        $providers = $query
-            ->whereRaw("(
-                6371 * acos(
-                    cos(radians(?)) * cos(radians(lat)) *
-                    cos(radians(lng) - radians(?)) +
-                    sin(radians(?)) * sin(radians(lat))
-                )
-            ) < ?", [$lat, $lng, $lat, $radius])
-            ->orderBy("distance")
-            ->get();
-
-        return response()->json($providers);
     }
 
-
-
+    /**
+     * Get the nearest provider to a service request
+     */
     public function nearestProvider($id)
     {
-        $serviceRequest = \App\Models\ServiceRequest::findOrFail($id);
+        try {
+            $nearestProvider = $this->locationService->getNearestProvider($id);
 
-        // Ensure the request has location and service
-        if (!$serviceRequest->lat || !$serviceRequest->lng) {
-            return response()->json(['message' => 'Service request does not have a location'], 400);
+            if (!$nearestProvider) {
+                return response()->json(['message' => 'No provider found'], 404);
+            }
+
+            return response()->json($nearestProvider);
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 400);
         }
-
-        // Find nearest provider with the same service_id and approved status
-        $nearestProvider = User::selectRaw("*, (
-            6371 * acos(
-                cos(radians(?)) * cos(radians(lat)) *
-                cos(radians(lng) - radians(?)) +
-                sin(radians(?)) * sin(radians(lat))
-            )
-        ) AS distance", [
-            $serviceRequest->lat,
-            $serviceRequest->lng,
-            $serviceRequest->lat
-        ])
-            ->where('type', 'Provider')
-            ->where('status', 'approved')
-            ->where('service_id', $serviceRequest->service_id)
-            ->orderBy('distance')
-            ->first();
-
-        if (!$nearestProvider) {
-            return response()->json(['message' => 'No provider found'], 404);
-        }
-
-        return response()->json($nearestProvider);
     }
 
-
-
+    /**
+     * Get all providers near a service request, ordered by distance
+     */
     public function nearestProvidersToServiceRequest($id)
     {
-        $serviceRequest = \App\Models\ServiceRequest::findOrFail($id);
+        try {
+            $providers = $this->locationService->getNearestProvidersToServiceRequest($id);
 
-        // Ensure the request has location and service
-        if (!$serviceRequest->lat || !$serviceRequest->lng) {
-            return response()->json(['message' => 'Service request does not have a location'], 400);
+            if ($providers->isEmpty()) {
+                return response()->json(['message' => 'No providers found'], 404);
+            }
+
+            return response()->json($providers);
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 400);
         }
-
-        // Find providers ordered by distance with the same service_id and approved status
-        $providers = User::selectRaw("*, (
-        6371 * acos(
-            cos(radians(?)) * cos(radians(lat)) *
-            cos(radians(lng) - radians(?)) + 
-            sin(radians(?)) * sin(radians(lat))
-        )
-    ) AS distance", [
-            $serviceRequest->lat,
-            $serviceRequest->lng,
-            $serviceRequest->lat
-        ])
-            ->where('type', 'Provider')
-            ->where('status', 'approved')
-            ->where('service_id', $serviceRequest->service_id)
-            ->orderBy('distance')
-            // ->limit(10) // optional: limit to top 10 nearest providers
-            ->get();
-
-        if ($providers->isEmpty()) {
-            return response()->json(['message' => 'No providers found'], 404);
-        }
-
-        return response()->json($providers);
     }
 }
