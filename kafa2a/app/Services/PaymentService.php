@@ -6,82 +6,83 @@ use App\Models\AcceptedOffer;
 use App\Models\Payment;
 use App\Models\ServiceRequest;
 use App\Models\User;
-use App\Payment\CashPayment;
-use App\Payment\PayPalPayment;
-use App\Payment\StripePayment;
-use App\Payment\CreditPayment;
-use Exception;
+use InvalidArgumentException;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Support\Facades\DB;
 
 /**
  * PaymentService - Orchestrates payment processing and workflow
+ * 
+ * Responsibilities:
+ * - Validate payment prerequisites using model methods
+ * - Select and invoke appropriate payment strategy
+ * - Coordinate atomic updates (payment + offer + request in transaction)
+ * 
+ * Business rules are delegated to models (ServiceRequest::canBePaid(), etc.)
  */
 class PaymentService
 {
     /**
      * Process payment for a service request
      * 
+     * Entire flow is atomic: payment, offer, and request are updated together in a transaction.
+     * All validation delegated to model methods for reusability.
+     * 
      * @param User $user The authenticated user (customer)
      * @param array $data Payment data including:
      *   - amount: float
      *   - gateway: string (paypal|stripe|cash|credit)
      *   - service_request_id: int
-     *   - offer_id: int (optional)
+     *   - offer_id: int
      * @return Payment The created payment record
-     * @throws Exception If payment fails or validation fails
+     * 
+     * @throws AuthorizationException If user cannot pay this request
+     * @throws InvalidArgumentException If data is invalid or prerequisites unmet
      */
     public function processPayment(User $user, array $data): Payment
     {
-        // Authorization: Only customers can pay
-        if (!$user->isUser()) {
-            throw new Exception('Only users can perform this action.');
-        }
+        // Validate required fields
+        $this->validatePaymentData($data);
 
-        // Get the service request
+        // Fetch service request (will throw ModelNotFoundException if not found)
         $serviceRequest = ServiceRequest::findOrFail($data['service_request_id']);
 
-        // Authorization: Can only pay for own requests
+        // Validate authorization: User must own the request
         if ($serviceRequest->user_id !== $user->id) {
-            throw new Exception('You can only pay for your own service requests.');
+            throw new AuthorizationException('You can only pay for your own service requests.');
         }
 
-        // Business rule: Can't pay twice
-        if (Payment::where('service_request_id', $data['service_request_id'])->exists()) {
-            throw new Exception('Payment already made for this request');
+        // Fetch and validate accepted offer
+        $acceptedOffer = AcceptedOffer::find($data['offer_id']);
+        if (!$acceptedOffer || !$acceptedOffer->belongsToRequest($serviceRequest)) {
+            throw new InvalidArgumentException('Offer does not belong to this service request.');
         }
 
-        // Business rule: Service must be completed before payment
-        if ($serviceRequest->status !== 'completed') {
-            throw new Exception('You can only pay after the service is completed.');
+        // Validate business prerequisites using model methods
+        if (!$serviceRequest->canBePaid()) {
+            throw new InvalidArgumentException('You can only pay after the service is completed and has not been paid yet.');
         }
 
-        // Get the accepted offer and provider
-        $offerId = $data['offer_id'] ?? null;
-        $acceptedOffer = AcceptedOffer::where('offer_id', $offerId)->first();
+        // Get payment strategy (using service container)
+        $strategy = $this->resolvePaymentStrategy($data['gateway']);
 
-        if (!$acceptedOffer) {
-            throw new Exception('No offer found for this service request.');
-        }
-
-        // Get payment strategy based on gateway
-        $strategy = $this->getPaymentStrategy($data['gateway']);
-
-        try {
+        // Process payment within atomic transaction
+        return DB::transaction(function () use ($user, $data, $serviceRequest, $acceptedOffer, $strategy) {
             // Process payment via selected gateway
             $payment = $strategy->pay([
                 'user_id' => $user->id,
                 'amount' => $data['amount'],
                 'service_request_id' => $data['service_request_id'],
                 'provider_id' => $acceptedOffer->provider_id,
-                'offer_id' => $offerId,
+                'offer_id' => $data['offer_id'],
             ]);
-        } catch (Exception $e) {
-            throw new Exception('Payment error: ' . $e->getMessage());
-        }
 
-        // Update related records on successful payment
-        $this->updatePaymentRecords($acceptedOffer, $serviceRequest);
+            // Update state using model methods (guaranteed atomicity)
+            $serviceRequest->markAsPaid();
+            $acceptedOffer->markAsPaid();
 
-        return $payment;
+            return $payment;
+        });
     }
 
     /**
@@ -95,36 +96,58 @@ class PaymentService
     }
 
     /**
-     * Get payment strategy instance based on gateway type
+     * PRIVATE: Validate payment data structure and required fields
      * 
-     * @param string $gateway Gateway type (paypal|stripe|cash|credit)
-     * @return \App\Payment\PaymentInterface
-     * @throws Exception If gateway is invalid
+     * @param array $data
+     * @throws InvalidArgumentException If required fields missing
      */
-    private function getPaymentStrategy(string $gateway)
+    private function validatePaymentData(array $data): void
     {
-        return match ($gateway) {
-            'paypal' => new PayPalPayment(),
-            'stripe' => new StripePayment(),
-            'credit' => new CreditPayment(),
-            'cash' => new CashPayment(),
-            default => throw new Exception('Invalid payment gateway: ' . $gateway),
-        };
+        if (empty($data['service_request_id'])) {
+            throw new InvalidArgumentException('service_request_id is required.');
+        }
+        if (empty($data['offer_id'])) {
+            throw new InvalidArgumentException('offer_id is required.');
+        }
+        if (empty($data['amount']) || $data['amount'] <= 0) {
+            throw new InvalidArgumentException('amount must be positive.');
+        }
+        if (empty($data['gateway'])) {
+            throw new InvalidArgumentException('gateway is required.');
+        }
     }
 
     /**
-     * Update payment-related records (AcceptedOffer and ServiceRequest status)
+     * PRIVATE: Resolve payment strategy from service container
      * 
-     * @param AcceptedOffer $acceptedOffer
-     * @param ServiceRequest $serviceRequest
-     * @return void
+     * Uses Laravel's service container (app) instead of direct instantiation.
+     * Keeps strategy selection clean, testable, and mockable.
+     * 
+     * Strategy classes must be registered in service container or resolvable.
+     * 
+     * @param string $gateway Gateway type (paypal|stripe|cash|credit)
+     * @return \App\Payment\PaymentInterface
+     * 
+     * @throws InvalidArgumentException If gateway is invalid or not resolvable
      */
-    private function updatePaymentRecords(AcceptedOffer $acceptedOffer, ServiceRequest $serviceRequest): void
+    private function resolvePaymentStrategy(string $gateway)
     {
-        // Mark accepted offer as paid
-        $acceptedOffer->update(['status' => 'paid']);
+        $strategyMap = [
+            'paypal' => 'App\\Payment\\PayPalPayment',
+            'stripe' => 'App\\Payment\\StripePayment',
+            'credit' => 'App\\Payment\\CreditPayment',
+            'cash' => 'App\\Payment\\CashPayment',
+        ];
 
-        // Mark service request as paid
-        $serviceRequest->update(['status' => 'paid']);
+        if (!isset($strategyMap[$gateway])) {
+            throw new InvalidArgumentException("Invalid payment gateway: {$gateway}. Supported: " . implode(', ', array_keys($strategyMap)));
+        }
+
+        $class = $strategyMap[$gateway];
+        try {
+            return app($class);
+        } catch (\Exception $e) {
+            throw new InvalidArgumentException("Cannot resolve payment strategy for gateway '{$gateway}': " . $e->getMessage());
+        }
     }
 }

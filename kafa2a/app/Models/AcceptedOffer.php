@@ -42,4 +42,35 @@ class AcceptedOffer extends Model
     {
         return $this->hasMany(Message::class);
     }
+
+    /**
+     * Validate that this accepted offer belongs to the given service request
+     * 
+     * @param ServiceRequest $request
+     * @return bool
+     */
+    public function belongsToRequest(ServiceRequest $request): bool
+    {
+        return $this->service_request_id === $request->id;
+    }
+
+    /**
+     * Mark this accepted offer as paid
+     * 
+     * @return $this
+     */
+    public function markAsPaid(): self
+    {
+        $this->update(['payment_status' => 'paid']);
+        return $this;
+    }
+
+    /**
+     * Check if this offer is already paid
+     */
+    public function isPaid(): bool
+    {
+        return $this->payment_status === 'paid';
+    }
+
 }

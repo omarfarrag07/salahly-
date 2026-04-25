@@ -90,4 +90,96 @@ class ServiceRequest extends Model
         return $this;
     }
 
+    /**
+     * Check if request has valid location (lat and lng)
+     */
+    public function hasValidLocation(): bool
+    {
+        return !empty($this->lat) && !empty($this->lng);
+    }
+
+    /**
+     * Check if request has a service assigned
+     */
+    public function hasService(): bool
+    {
+        return !empty($this->service_id);
+    }
+
+    /**
+     * Check if request is ready for provider matching (has location and service)
+     */
+    public function isReadyForMatching(): bool
+    {
+        return $this->hasValidLocation() && $this->hasService();
+    }
+
+    /**
+     * Ensure request is ready for provider matching
+     * 
+     * Validates both location and service, throwing specific exceptions for each.
+     * Use this when you need validation with failure handling.
+     * 
+     * @throws InvalidArgumentException If location or service is missing
+     */
+    public function ensureReadyForMatching(): void
+    {
+        if (!$this->hasValidLocation()) {
+            throw new \InvalidArgumentException('Service request does not have a valid location.');
+        }
+
+        if (!$this->hasService()) {
+            throw new \InvalidArgumentException('Service request does not have a service assigned.');
+        }
+    }
+
+    /**
+     * Check if request is completed
+     */
+    public function isCompleted(): bool
+    {
+        return $this->status === 'completed';
+    }
+
+    /**
+     * Check if request can be paid (must be completed and not already paid)
+     */
+    public function canBePaid(): bool
+    {
+        return $this->isCompleted() && !$this->isPaid();
+    }
+
+    /**
+     * Check if request is already paid
+     */
+    public function isPaid(): bool
+    {
+        return $this->status === 'paid';
+    }
+
+    /**
+     * Mark this request as paid
+     * 
+     * @return $this
+     */
+    public function markAsPaid(): self
+    {
+        $this->update(['status' => 'paid']);
+        return $this;
+    }
+
+    /**
+     * Update request details (non-state fields like title, description, location, etc.)
+     * 
+     * Use this for data updates. Use cancel(), complete(), markAsPaid() for state transitions.
+     * 
+     * @param array $data Fields to update
+     * @return $this
+     */
+    public function updateDetails(array $data): self
+    {
+        $this->update($data);
+        return $this;
+    }
+
 }

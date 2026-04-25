@@ -41,4 +41,28 @@ class Payment extends Model
     {
         return $this->belongsTo(AcceptedOffer::class, 'offer_id');
     }
+
+    /**
+     * Query scope: Check if payment already exists for a service request
+     * 
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param int $serviceRequestId
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeForServiceRequest($query, int $serviceRequestId)
+    {
+        return $query->where('service_request_id', $serviceRequestId);
+    }
+
+    /**
+     * Check if payment exists for a service request
+     * 
+     * @param int $serviceRequestId
+     * @return bool
+     */
+    public static function existsForRequest(int $serviceRequestId): bool
+    {
+        return self::forServiceRequest($serviceRequestId)->exists();
+    }
+
 }
