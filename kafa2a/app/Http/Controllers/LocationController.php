@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Services\LocationService;
+use App\Models\ServiceRequest;
 
 class LocationController extends Controller
 {
@@ -42,36 +43,48 @@ class LocationController extends Controller
 
     /**
      * Get the nearest provider to a service request
+     * 
+     * Controller handles model fetching, service handles location logic
      */
     public function nearestProvider($id)
     {
         try {
-            $nearestProvider = $this->locationService->getNearestProvider($id);
+            $request = ServiceRequest::findOrFail($id);
+            $nearestProvider = $this->locationService->getNearestProvider($request);
 
             if (!$nearestProvider) {
                 return response()->json(['message' => 'No provider found'], 404);
             }
 
             return response()->json($nearestProvider);
-        } catch (\Exception $e) {
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json(['message' => 'Service request not found'], 404);
+        } catch (\InvalidArgumentException $e) {
             return response()->json(['message' => $e->getMessage()], 400);
         }
     }
 
     /**
      * Get all providers near a service request, ordered by distance
+     * 
+     * Controller handles model fetching, service handles location logic
      */
-    public function nearestProvidersToServiceRequest($id)
+    public function nearestProvidersToServiceRequest($id, Request $request)
     {
         try {
-            $providers = $this->locationService->getNearestProvidersToServiceRequest($id);
+            $serviceRequest = ServiceRequest::findOrFail($id);
+            $limit = $request->query('limit', 10);
+
+            $providers = $this->locationService->getNearestProviders($serviceRequest, limit: (int) $limit);
 
             if ($providers->isEmpty()) {
                 return response()->json(['message' => 'No providers found'], 404);
             }
 
             return response()->json($providers);
-        } catch (\Exception $e) {
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json(['message' => 'Service request not found'], 404);
+        } catch (\InvalidArgumentException $e) {
             return response()->json(['message' => $e->getMessage()], 400);
         }
     }

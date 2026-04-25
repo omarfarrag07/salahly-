@@ -75,7 +75,7 @@ class ServiceRequestService
     public function updateRequest(int $id, User $user, array $data): ServiceRequest
     {
         $request = $this->getOwnedRequest($id, $user);
-        $request->update($data);
+        $request->updateDetails($data);
         return $request;
     }
 
