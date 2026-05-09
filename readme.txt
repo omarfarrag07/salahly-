@@ -14,11 +14,7 @@ This is the backend API for the Kafa2a app (Salahly), a platform connecting user
 
 ## 🚀 Getting Started
 
-### 1. Clone the repository
-
-```bash
-git clone https://github.com/omarfarrag07/salahly-.git
-cd kafa2a
+### 1. Download the repository
 
 
 2. Install dependencies
@@ -191,11 +187,4 @@ bash: php artisan test
 
 
 
-📞 Maintainer
-
-    👤 Omar Mohamed Mostafa
-
-    📧 omarfarrag2040@gmail.com
-
-    🧠 Laravel + Flutter Developer
 
