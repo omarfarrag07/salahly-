@@ -1,190 +1,98 @@
-# Kafa2a - Laravel Backend
+Here is a clean Silver-ready README.md (focused, correct, and includes Docker setup properly):
 
-This is the backend API for the Kafa2a app (Salahly), a platform connecting users with service providers like carpenters, electricians, drivers, mechanics, babysitters, and more.
+Kafa2a - Laravel Backend
 
-## 📦 Tech Stack
+Backend API for Kafa2a (Salahly) — a platform connecting users with service providers (carpenters, electricians, drivers, mechanics, babysitters, etc.).
 
-- **Laravel 12**
-- **Laravel Sanctum** for API authentication
-- **PostgreSQL**
-- **Pusher** (for real-time messaging)
-- **Flutter** frontend (mobile app)
+📦 Tech Stack
+Laravel 12
+PostgreSQL
+Laravel Sanctum (Authentication)
+Pusher (Real-time chat)
+Docker (Development environment)
+Flutter (Frontend mobile app)
+🚀 Running the Project (Recommended: Docker)
+1. download the repo
 
----
+2. Start with Docker
 
-## 🚀 Getting Started
+Make sure Docker is installed, then run:
 
-### 1. Download the repository
+sudo docker-compose up --build
 
+This will start:
 
-2. Install dependencies
+Laravel app → http://localhost:8000
+PostgreSQL database → container service (db)
+3. Environment Setup
 
-bash : composer install
+Inside Docker, .env is auto-created from .env.example.
 
-3. Copy and configure .env
-
-bash : cp .env.example .env
-
-Edit your .env file:
-
-APP_NAME=Kafa2a
-APP_URL=http://127.0.0.1:8000
+Make sure DB settings are:
 
 DB_CONNECTION=pgsql
-DB_HOST=127.0.0.1
+DB_HOST=db
 DB_PORT=5432
-DB_DATABASE=kafa2a
-DB_USERNAME=your_db_username
-DB_PASSWORD=your_db_password
+DB_DATABASE=kafa2a_db
+DB_USERNAME=developer1
+DB_PASSWORD=1234
+4. Run migrations
+sudo docker exec -it kafa2a_app php artisan migrate
 
-SANCTUM_STATEFUL_DOMAINS=localhost:8000
+(Optional seed)
 
-PUSHER_APP_ID=your_app_id
-PUSHER_APP_KEY=your_app_key
-PUSHER_APP_SECRET=your_app_secret
-PUSHER_APP_CLUSTER=mt1
-
-
-4. Generate application key
-
+sudo docker exec -it kafa2a_app php artisan db:seed
+5. Generate app key (if needed)
+sudo docker exec -it kafa2a_app php artisan key:generate
+🧪 Local (Without Docker)
+1. Install dependencies
+composer install
+2. Setup environment
+cp .env.example .env
 php artisan key:generate
-
-
-
-5. Run database migrations
-
+3. Run PostgreSQL locally and update:
+DB_HOST=127.0.0.1
+4. Run migrations
 php artisan migrate
-
-(Optional: run seeders if defined)
-
-php artisan db:seed
-
-
-
-
-6. Serve the project
-
-bash: php artisan serve
-
-Your API will be available at:
-http://127.0.0.1:8000
-
-
-🔐 Authentication & Login
-📌 Register
-
-    User: POST /api/register
-
-    Provider: POST /api/register-provider
-
-🔐 Login
-
-    Endpoint: POST /api/token
-
-    Body (JSON):
-
+5. Start server
+php artisan serve
+🔐 Authentication
+Register
+POST /api/register
+POST /api/register-provider
+Login
+POST /api/token
 {
   "email": "user@example.com",
-  "password": "yourpassword"
+  "password": "password"
 }
 
-    Response:
+Response:
 
 {
-  "token": "your-api-token",
-  "user": {
-    "id": 1,
-    "name": "John Doe",
-    ...
-  }
+  "token": "your-token",
+  "user": { ... }
 }
+📡 API Usage
 
-Use the token in the header for authenticated requests:
+For authenticated requests:
 
-
-Authorization: Bearer your-api-token
-
-
-📲 Flutter Integration
-
-    Pass Authorization: Bearer <token> in all secure requests
-
-    Use Accept: application/json header
-
-    Send login/register body as raw JSON, not form-data
-
-    Upload files as multipart/form-data
-
-    If using chat, configure Pusher on both Laravel and Flutter sides
-
-
-
-📁 Folder Structure
-
-Kafa2a/
-├── app/
-│   ├── Http/Controllers/
-│   ├── Models/
-│   └── ...
-├── database/
-│   ├── migrations/
-│   └── seeders/
-├── routes/
-│   └── api.php
-├── .env
-└── README.md
-
-
-🧪 Testing with Postman
-✅ Headers
-
+Authorization: Bearer YOUR_TOKEN
 Accept: application/json
-Content-Type: application/json
-
-Example Login Request
-
-POST /api/token
-Body:
-
-{
-  "email": "test@example.com",
-  "password": "12345678"
-}
-
-
-
-📌 API Features
-Feature	Endpoint
-Register User	POST /api/register
-Register Provider	POST /api/register-provider
-Login & Token	POST /api/token
-Service Requests	GET /api/service-requests
-Offers	GET /api/offers
-Messaging (Chat)	POST /api/messages
-Ratings	POST /api/ratings
-Categories	GET /api/categories
-Admin Dashboard	GET /api/admin/dashboard
-
-
-🧪 Run Laravel Tests
-
-bash: php artisan test
-
-
-🧹 Common Issues & Fixes
-
-    ❌ Empty or HTML responses: Make sure you’re using Accept: application/json
-
-    ❌ Invalid token error: Ensure you're logged in and passing the token correctly
-
-
-
-    🔄 After .env updates:
-
-    php artisan config:clear
-    php artisan cache:clear
-    php artisan route:clear
-
-
-
-
+📁 Project Structure
+app/
+├── Http/Controllers/
+├── Models/
+database/
+├── migrations/
+routes/
+├── api.php
+docker-compose.yml
+Dockerfile
+🐳 Docker Notes
+DB service name is: db
+Laravel app service is: kafa2a_app
+PostgreSQL runs on port 5432 inside container
+Do NOT use 127.0.0.1 inside Docker
+🧪 Testing
+php artisan test
